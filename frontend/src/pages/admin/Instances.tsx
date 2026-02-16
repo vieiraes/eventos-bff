@@ -59,8 +59,8 @@ export function AdminInstances() {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
-      month: 'short',
-      year: 'numeric',
+      month: '2-digit',
+      year: '2-digit',
     })
   }
 
