@@ -92,6 +92,14 @@ function App() {
               </AdminRoute>
             }
           />
+          <Route
+            path="/admin/users/:id/edit"
+            element={
+              <AdminRoute>
+                <OrganizerForm />
+              </AdminRoute>
+            }
+          />
           
           {/* Organizer Routes */}
           <Route

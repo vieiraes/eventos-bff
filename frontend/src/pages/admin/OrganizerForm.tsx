@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 import { createClient } from '@supabase/supabase-js'
 import { AdminLayout } from '../../components/AdminLayout'
@@ -9,9 +9,12 @@ import type { Instance } from '../../types'
 
 export function OrganizerForm() {
   const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
+  const isEditing = Boolean(id)
   
   const [loading, setLoading] = useState(false)
   const [loadingInstances, setLoadingInstances] = useState(true)
+  const [loadingData, setLoadingData] = useState(isEditing)
   const [error, setError] = useState('')
   const [instances, setInstances] = useState<Instance[]>([])
 
@@ -29,7 +32,10 @@ export function OrganizerForm() {
 
   useEffect(() => {
     loadInstances()
-  }, [])
+    if (isEditing && id) {
+      loadUser(id)
+    }
+  }, [id, isEditing])
 
   const loadInstances = async () => {
     try {
@@ -48,19 +54,52 @@ export function OrganizerForm() {
     }
   }
 
+  const loadUser = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (error) throw error
+
+      if (data) {
+        setFormData({
+          role: data.role as 'superadmin' | 'organizer',
+          email: data.email,
+          full_name: data.full_name,
+          phone: data.phone || '',
+          instance_id: data.instance_id || '',
+          company: data.company || '',
+          position: data.position || '',
+          password: '',
+          confirmPassword: '',
+        })
+      }
+    } catch (err: any) {
+      setError(err.message || 'Erro ao carregar usuário')
+    } finally {
+      setLoadingData(false)
+    }
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
 
     // Validações
-    if (formData.password !== formData.confirmPassword) {
-      setError('As senhas não coincidem')
-      return
-    }
+    if (!isEditing) {
+      // Validações apenas para criação (senha obrigatória)
+      if (formData.password !== formData.confirmPassword) {
+        setError('As senhas não coincidem')
+        return
+      }
 
-    if (formData.password.length < 6) {
-      setError('A senha deve ter no mínimo 6 caracteres')
-      return
+      if (formData.password.length < 6) {
+        setError('A senha deve ter no mínimo 6 caracteres')
+        return
+      }
     }
 
     if (formData.role === 'organizer' && !formData.instance_id) {
@@ -71,6 +110,24 @@ export function OrganizerForm() {
     setLoading(true)
 
     try {
+      if (isEditing && id) {
+        // MODO EDIÇÃO: Atualizar usuário existente
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            role: formData.role,
+            full_name: formData.full_name,
+            phone: formData.phone || null,
+            instance_id: formData.role === 'organizer' ? formData.instance_id : null,
+            company: formData.company || null,
+            position: formData.position || null,
+          })
+          .eq('id', id)
+
+        if (updateError) throw updateError
+        navigate('/admin/users')
+        return
+      }
       // 1. Criar cliente Supabase ANÔNIMO para criar usuário sem afetar sessão atual
       // Usando as mesmas credenciais mas com persistSession: false
       const anonClient = createClient(
@@ -122,13 +179,27 @@ export function OrganizerForm() {
 
   const selectedInstance = instances.find(i => i.id === formData.instance_id)
 
+  if (loadingData) {
+    return (
+      <AdminLayout>
+        <div className="text-center py-12">
+          <p className="text-gray-500">Carregando...</p>
+        </div>
+      </AdminLayout>
+    )
+  }
+
   return (
     <AdminLayout>
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Novo Usuário Administrativo</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {isEditing ? 'Editar Usuário Administrativo' : 'Novo Usuário Administrativo'}
+          </h1>
           <p className="mt-2 text-gray-600">
-            Crie um SuperAdmin (gerencia tudo) ou Organizer (gerencia uma instância)
+            {isEditing 
+              ? 'Edite os dados do SuperAdmin ou Organizer'
+              : 'Crie um SuperAdmin (gerencia tudo) ou Organizer (gerencia uma instância)'}
           </p>
         </div>
 
@@ -194,9 +265,11 @@ export function OrganizerForm() {
                   label="Email *"
                   type="email"
                   required
+                  disabled={isEditing}
                   placeholder="carlos@multieventos.com.br"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  helperText={isEditing ? 'Email não pode ser alterado' : undefined}
                 />
 
                 <FormInput
@@ -225,32 +298,34 @@ export function OrganizerForm() {
               </div>
             </div>
 
-            {/* Senha */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Senha de Acesso</h3>
-              
-              <div className="space-y-4">
-                <FormInput
-                  label="Senha *"
-                  type="password"
-                  required
-                  minLength={6}
-                  placeholder="Mínimo 6 caracteres"
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                />
+            {/* Senha (apenas para criação) */}
+            {!isEditing && (
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Senha de Acesso</h3>
+                
+                <div className="space-y-4">
+                  <FormInput
+                    label="Senha *"
+                    type="password"
+                    required
+                    minLength={6}
+                    placeholder="Mínimo 6 caracteres"
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  />
 
-                <FormInput
-                  label="Confirmar Senha *"
-                  type="password"
-                  required
-                  minLength={6}
-                  placeholder="Digite a senha novamente"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                />
+                  <FormInput
+                    label="Confirmar Senha *"
+                    type="password"
+                    required
+                    minLength={6}
+                    placeholder="Digite a senha novamente"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Ações */}
             <div className="flex justify-end space-x-3 pt-4 border-t">
@@ -266,7 +341,9 @@ export function OrganizerForm() {
                 disabled={loading}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
               >
-                {loading ? 'Criando...' : formData.role === 'superadmin' ? 'Criar SuperAdmin' : 'Criar Organizer'}
+                {loading 
+                  ? (isEditing ? 'Salvando...' : 'Criando...') 
+                  : (isEditing ? 'Salvar Alterações' : (formData.role === 'superadmin' ? 'Criar SuperAdmin' : 'Criar Organizer'))}
               </button>
             </div>
           </form>
