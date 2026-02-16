@@ -14,6 +14,7 @@ import { InstanceForm } from './pages/admin/InstanceForm'
 import { OrganizerForm } from './pages/admin/OrganizerForm'
 import { OrganizerDashboard } from './pages/organizer/Dashboard'
 import { OrganizerEvents } from './pages/organizer/Events'
+import { EventForm } from './pages/organizer/EventForm'
 
 function App() {
   return (
@@ -115,6 +116,22 @@ function App() {
             element={
               <OrganizerRoute>
                 <OrganizerEvents />
+              </OrganizerRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/new"
+            element={
+              <OrganizerRoute>
+                <EventForm />
+              </OrganizerRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/:id/edit"
+            element={
+              <OrganizerRoute>
+                <EventForm />
               </OrganizerRoute>
             }
           />

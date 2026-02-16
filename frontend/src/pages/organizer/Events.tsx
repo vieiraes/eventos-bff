@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { OrganizerLayout } from '../../components/OrganizerLayout'
@@ -104,12 +105,12 @@ export function OrganizerEvents() {
               Gerencie os eventos da sua instância
             </p>
           </div>
-          <button
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-            onClick={() => alert('Funcionalidade de criar evento será implementada em breve')}
+          <Link
+            to="/organizer/events/new"
+            className="px-4 py-3 text-base font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
             + Novo Evento
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -171,12 +172,12 @@ export function OrganizerEvents() {
               ? 'Comece criando seu primeiro evento.'
               : `Não há eventos com o status "${filterStatus}".`}
           </p>
-          <button
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-            onClick={() => alert('Funcionalidade de criar evento será implementada em breve')}
+          <Link
+            to="/organizer/events/new"
+            className="inline-block px-4 py-3 text-base font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
             Criar Primeiro Evento
-          </button>
+          </Link>
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -201,15 +202,21 @@ export function OrganizerEvents() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Capacidade
                 </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {events.map((event) => (
                 <tr key={event.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">
+                    <Link 
+                      to={`/organizer/events/${event.id}/edit`}
+                      className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                    >
                       {event.name}
-                    </div>
+                    </Link>
                     <div className="text-sm text-gray-500">
                       {event.slug}
                     </div>
@@ -234,6 +241,17 @@ export function OrganizerEvents() {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {event.capacity ? event.capacity.toLocaleString('pt-BR') : '—'}
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm font-medium">
+                    <Link
+                      to={`/organizer/events/${event.id}/edit`}
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Editar
+                    </Link>
                   </td>
                 </tr>
               ))}
