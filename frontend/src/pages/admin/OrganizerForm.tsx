@@ -110,17 +110,6 @@ export function OrganizerForm() {
 
       if (updateError) throw updateError
 
-      alert(`✅ Usuário criado com sucesso!
-      
-📧 Email: ${formData.email}
-🔑 Senha: ${formData.password}
-👤 Nome: ${formData.full_name}
-🎯 Role: ${formData.role}
-${formData.role === 'organizer' ? `🏢 Instância: ${selectedInstance?.name}` : ''}
-
-✅ Você continua logado como SuperAdmin
-`)
-      
       navigate('/admin/users')
     } catch (err: any) {
       setError(err.message || 'Erro ao criar usuário')
