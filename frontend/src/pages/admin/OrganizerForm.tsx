@@ -31,10 +31,13 @@ export function OrganizerForm() {
   })
 
   useEffect(() => {
-    loadInstances()
-    if (isEditing && id) {
-      loadUser(id)
+    const loadData = async () => {
+      await loadInstances()
+      if (isEditing && id) {
+        await loadUser(id)
+      }
     }
+    loadData()
   }, [id, isEditing])
 
   const loadInstances = async () => {
@@ -58,7 +61,7 @@ export function OrganizerForm() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('*')
+        .select('*, instances(*)')
         .eq('id', userId)
         .single()
 
@@ -76,6 +79,17 @@ export function OrganizerForm() {
           password: '',
           confirmPassword: '',
         })
+
+        // Se o usuário tem instance_id e a instância não está na lista (por não ser active), adicionar
+        if (data.instance_id && data.instances) {
+          setInstances(prev => {
+            const instanceExists = prev.some(i => i.id === data.instance_id)
+            if (!instanceExists) {
+              return [...prev, data.instances as Instance]
+            }
+            return prev
+          })
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar usuário')
