@@ -1,0 +1,312 @@
+// ============================================
+// EVENTOS-BFF - Database Schema
+// Sistema SaaS Multi-tenant para Gestão de Eventos Corporativos
+// MVP: Foco em Gestão de Usuários, Eventos e Controle de Acesso
+// ============================================
+// Docs: https://dbml.dbdiagram.io/docs
+//
+// ATUALIZAÇÕES RECENTES:
+// - Removido campo 'email_verified' da tabela users (não necessário no MVP)
+// - Funções helper de segurança: is_superadmin(), get_user_instance_id(), get_user_role()
+// - Políticas RLS atualizadas para evitar recursão infinita
+// - Integração com Supabase Auth via triggers (handle_new_user, handle_user_update)
+// ============================================
+
+// ============================================
+// CORE TABLES - Multi-tenancy & Users
+// ============================================
+
+Table instances {
+  id uuid [primary key, default: `gen_random_uuid()`]
+  name varchar [not null, note: 'Nome da empresa/organização']
+  slug varchar [unique, not null, note: 'URL-friendly identifier']
+  type varchar [not null, default: 'standard', note: 'standard, enterprise, premium']
+  status varchar [not null, default: 'active', note: 'active, suspended, cancelled']
+  settings jsonb [note: 'Instance-specific configurations']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    slug [unique]
+    status
+  }
+  
+  Note: 'Instância SaaS - Uma empresa pode criar N eventos. Cada instância é isolada.'
+}
+
+Table users {
+  id uuid [primary key, default: `gen_random_uuid()`]
+  instance_id uuid [null, note: 'Null apenas para SUPERADMIN']
+  email varchar [unique, not null]
+  full_name varchar [not null]
+  phone varchar
+  avatar_url varchar
+  document_number varchar [note: 'CPF/CNPJ/Passport']
+  
+  // Dados profissionais/pessoais
+  company varchar
+  position varchar
+  bio text
+  
+  // Sistema
+  role varchar [not null, default: 'attendee', note: 'superadmin, organizer, staff, attendee, speaker, vip']
+  status varchar [not null, default: 'active', note: 'active, inactive, blocked']
+  
+  metadata jsonb [note: 'Dados adicionais flexíveis (dietary_restrictions, special_needs, etc)']
+  last_login_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    email [unique]
+    instance_id
+    (instance_id, role)
+    document_number
+  }
+  
+  Note: 'Usuários do sistema - TUDO é user (participantes, organizadores, staff, palestrantes, vip)'
+}
+
+// ============================================
+// EVENTS MANAGEMENT
+// ============================================
+
+Table events {
+  id uuid [primary key, default: `gen_random_uuid()`]
+  instance_id uuid [not null]
+  created_by uuid [not null, note: 'User ID who created the event']
+  
+  name varchar [not null]
+  slug varchar [not null, note: 'URL-friendly event identifier']
+  description text
+  event_type varchar [not null, note: 'conference, workshop, seminar, congress, fair']
+  
+  start_date timestamp [not null]
+  end_date timestamp [not null]
+  timezone varchar [default: 'America/Sao_Paulo']
+  
+  venue_name varchar [not null, note: 'e.g., Centro de Convenções de Vitória']
+  venue_address text
+  venue_city varchar
+  venue_state varchar
+  venue_country varchar [default: 'Brasil']
+  venue_map_url varchar [note: 'Google Maps link']
+  
+  capacity integer [note: 'Maximum attendees']
+  status varchar [not null, default: 'draft', note: 'draft, published, ongoing, completed, cancelled']
+  
+  banner_url varchar
+  logo_url varchar
+  website_url varchar
+  
+  settings jsonb [note: 'Custom event configurations']
+  metadata jsonb
+  
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    instance_id
+    (instance_id, slug) [unique]
+    status
+    (start_date, end_date)
+  }
+  
+  Note: 'Eventos criados por uma instância. Ex: Congresso de Cirurgia Plástica 2026'
+}
+
+// ============================================
+// REGISTRATIONS - Funil de Inscrição
+// ============================================
+
+Table registrations {
+  id uuid [primary key, default: `gen_random_uuid()`]
+  event_id uuid [not null]
+  user_id uuid [not null]
+  
+  // Identificação
+  registration_code varchar [unique, note: 'Código único da inscrição: VET2026-0001']
+  
+  // Funil de conversão
+  status varchar [not null, default: 'pre_registered', note: 'pre_registered, awaiting_payment, paid, confirmed, cancelled, expired']
+  
+  // Dados específicos da inscrição
+  badge_name varchar [note: 'Nome para impressão no crachá']
+  ticket_type varchar [note: 'early_bird, regular, vip, free']
+  
+  // Valor total (calculado dos items)
+  total_amount decimal(10,2) [default: 0, note: 'Soma de todos os registration_items']
+  currency varchar [default: 'BRL']
+  
+  // Timestamps do funil
+  registered_at timestamp [default: `now()`]
+  payment_requested_at timestamp
+  paid_at timestamp
+  confirmed_at timestamp
+  cancelled_at timestamp
+  
+  // Informações adicionais
+  cancellation_reason text
+  metadata jsonb [note: 'Dados extras (dietary_restrictions, special_needs, etc)']
+  
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    event_id
+    user_id
+    (event_id, user_id) [unique]
+    status
+    registration_code [unique]
+  }
+  
+  Note: 'Inscrições no evento - Rastreia funil desde pré-cadastro até confirmação'
+}
+
+Table registration_items {
+  id uuid [primary key, default: `gen_random_uuid()`]
+  registration_id uuid [not null]
+  access_package_id uuid [not null]
+  
+  quantity integer [default: 1, note: 'Quantidade de pacotes (geralmente 1)']
+  unit_price decimal(10,2) [not null, note: 'Preço unitário no momento da compra']
+  total_price decimal(10,2) [not null, note: 'quantity * unit_price']
+  
+  status varchar [default: 'pending', note: 'pending, paid, cancelled']
+  
+  added_at timestamp [default: `now()`]
+  paid_at timestamp
+  
+  metadata jsonb
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    registration_id
+    access_package_id
+    (registration_id, access_package_id) [unique]
+    status
+  }
+  
+  Note: 'Items/Pacotes escolhidos durante o pré-cadastro. Funciona como carrinho de compras.'
+}
+
+// ============================================
+// ÁREAS E CONTROLE DE ACESSO
+// ============================================
+
+Table event_areas {
+  id uuid [primary key, default: `gen_random_uuid()`]
+  event_id uuid [not null]
+  name varchar [not null, note: 'Sala 1, Sala 14, Área de Stands, Hall Principal']
+  code varchar [note: 'S1, S14, STANDS, HALL - Identificador curto']
+  description text
+  area_type varchar [note: 'room, hall, stands, vip_lounge, entrance, backstage']
+  capacity integer
+  floor varchar
+  status varchar [default: 'active', note: 'active, inactive, maintenance']
+  metadata jsonb [note: 'Informações adicionais da área']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    event_id
+    (event_id, code) [unique]
+    area_type
+  }
+  
+  Note: 'Áreas/salas do evento. Controle de acesso via access_packages.'
+}
+
+Table access_packages {
+  id uuid [primary key, default: `gen_random_uuid()`]
+  event_id uuid [not null]
+  name varchar [not null, note: 'Básico, Premium, Full Access, Acesso Sala 14']
+  description text
+  package_type varchar [note: 'base, addon, premium, vip']
+  
+  // Controle de acesso
+  allowed_areas jsonb [note: 'Array de IDs de event_areas que este pacote libera']
+  
+  // Comercial
+  price decimal(10,2)
+  currency varchar [default: 'BRL']
+  available_quantity integer [note: 'Qtd disponível para venda']
+  
+  status varchar [default: 'active', note: 'active, inactive, sold_out']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    event_id
+    package_type
+    status
+  }
+  
+  Note: 'Pacotes de acesso que definem quais áreas o usuário pode acessar.'
+}
+
+Table user_access {
+  id uuid [primary key, default: `gen_random_uuid()`]
+  registration_id uuid [not null, note: 'Vinculado à inscrição']
+  registration_item_id uuid [null, note: 'Item específico que originou este acesso']
+  user_id uuid [not null]
+  event_id uuid [not null]
+  access_package_id uuid [not null]
+  
+  acquired_type varchar [not null, note: 'purchased, complimentary, upgraded, sponsor']
+  acquired_at timestamp [default: `now()`]
+  
+  valid_from timestamp [default: `now()`]
+  valid_until timestamp [note: 'Data de expiração do acesso, se aplicável']
+  
+  status varchar [default: 'active', note: 'active, expired, revoked']
+  
+  metadata jsonb [note: 'Informações adicionais sobre aquisição']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    registration_id
+    registration_item_id
+    user_id
+    event_id
+    access_package_id
+    (registration_id, access_package_id) [unique]
+    status
+  }
+  
+  Note: 'Acessos efetivos do usuário. Criado quando registration_item é pago/confirmado.'
+}
+
+// ============================================
+// RELATIONSHIPS
+// ============================================
+
+// Instances & Users
+Ref: users.instance_id > instances.id [delete: set null]
+
+// Events
+Ref: events.instance_id > instances.id [delete: cascade]
+Ref: events.created_by > users.id [delete: set null]
+
+// Registrations
+Ref: registrations.event_id > events.id [delete: cascade]
+Ref: registrations.user_id > users.id [delete: cascade]
+
+// Registration Items
+Ref: registration_items.registration_id > registrations.id [delete: cascade]
+Ref: registration_items.access_package_id > access_packages.id [delete: restrict]
+
+// Event Areas
+Ref: event_areas.event_id > events.id [delete: cascade]
+
+// Access Packages
+Ref: access_packages.event_id > events.id [delete: cascade]
+
+// User Access
+Ref: user_access.registration_id > registrations.id [delete: cascade]
+Ref: user_access.registration_item_id > registration_items.id [delete: set null]
+Ref: user_access.user_id > users.id [delete: cascade]
+Ref: user_access.event_id > events.id [delete: cascade]
+Ref: user_access.access_package_id > access_packages.id [delete: cascade]
