@@ -83,8 +83,8 @@ export function EventForm() {
           slug: data.slug,
           description: data.description || '',
           event_type: data.event_type,
-          start_date: data.start_date,
-          end_date: data.end_date,
+          start_date: data.start_date.split('T')[0], // Extrai apenas YYYY-MM-DD
+          end_date: data.end_date ? data.end_date.split('T')[0] : '', // Extrai apenas YYYY-MM-DD
           venue_name: data.venue_name,
           venue_city: data.venue_city || '',
           venue_state: data.venue_state || '',
