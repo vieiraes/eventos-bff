@@ -157,6 +157,19 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
 
+### UX Consistency (Constitution Principle VII)
+
+> Verify compliance with Component Composition & Reusability principle
+
+- [ ] TXXX [P] Audit all forms - ensure using FormInput/FormSelect/FormTextarea (no raw `<input>` tags)
+- [ ] TXXX [P] Verify labels are text-base font-semibold (not too small)
+- [ ] TXXX [P] Test contrast ratios meet WCAG AA (border visibility on backgrounds)
+- [ ] TXXX [P] Verify touch targets are min 44x44px (buttons, inputs)
+- [ ] TXXX Test interactive states: hover changes border/background, focus shows ring
+- [ ] TXXX Verify error states display properly (red border + message)
+- [ ] TXXX Verify helper text appears below fields when provided
+- [ ] TXXX Test form UX on mobile viewport (fields still easily tappable)
+
 ---
 
 ## Dependencies & Execution Order

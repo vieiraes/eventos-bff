@@ -2,19 +2,26 @@
 
 <!--
 Sync Impact Report:
-Version: 1.0.0 (Initial Constitution)
-Created: 2026-02-16
+Version: 1.1.0 → Previous: 1.0.0
+Last Amended: 2026-02-16
 Changes:
-  - Initial creation based on project analysis
-  - Defined 7 core principles
-  - Established multi-tenant architecture standards
-  - Security and RLS policies documented
-  - TypeScript and React best practices codified
+  - EXPANDED Principle VII: Added UX Standards and Form Component Guidelines
+  - NEW SECTION: Form Component Patterns with specific styling requirements
+  - Added accessibility and contrast requirements
+  - Documented reusable component props pattern (label, error, helperText)
+  - Added Development Standards for UI/UX consistency
+Modified Principles:
+  - Principle VII (Component Composition & Reusability): Materially expanded with UX guidelines
+Added Sections:
+  - Form Component Patterns under Principle VII
+  - UI/UX consistency guidelines in Development Standards
 Templates Status:
-  - ✅ plan-template.md: Aligned with multi-tenant isolation principle
-  - ✅ spec-template.md: Aligned with schema-first design principle
-  - ✅ tasks-template.md: Aligned with security-first and testing principles
-Follow-up: None (initial version)
+  - ✅ plan-template.md: Aligned
+  - ✅ spec-template.md: Aligned
+  - ✅ tasks-template.md: Should verify UX testing tasks included
+Follow-up:
+  - ⚠ tasks-template.md: Verify includes "Test form UX consistency" task type
+  - ⚠ Apply FormInput/FormSelect to remaining forms (Login, Register if exist)
 -->
 
 ## Core Principles
@@ -96,7 +103,7 @@ Follow-up: None (initial version)
 **Rationale**: Supabase handles scaling, security, and infrastructure. Custom solutions increase maintenance burden and introduce bugs.
 
 ### VII. Component Composition & Reusability
-**Principle**: Build UI from composable, reusable components.
+**Principle**: Build UI from composable, reusable components with consistent UX.
 
 **Patterns**:
 - Layout components: `AdminLayout`, `OrganizerLayout` (role-specific shells)
@@ -110,8 +117,72 @@ Follow-up: None (initial version)
 - Extract common patterns to `components/` or `hooks/`
 - Props should be explicitly typed with interfaces
 - Components should be focused (single responsibility)
+- **UX consistency MUST be enforced through reusable components, not copy-paste**
 
-**Rationale**: Reusability reduces bugs, speeds development, ensures UI consistency. Small focused components are easier to test and maintain.
+**Rationale**: Reusability reduces bugs, speeds development, ensures UI consistency. Small focused components are easier to test and maintain. Inconsistent UX damages user trust and increases cognitive load.
+
+#### Form Component Patterns (MANDATORY)
+
+**Problem Solved**: Default Tailwind inputs have poor UX:
+- Too small (hard to click/tap)
+- Low contrast (gray borders on white background)
+- Inconsistent styling across forms
+- Missing accessibility features
+
+**Solution**: Reusable form components in `components/` with enhanced UX:
+
+**Component Library**:
+- `FormInput.tsx` - Text inputs with enhanced UX
+- `FormSelect.tsx` - Dropdowns with matching styling
+- `FormTextarea.tsx` - Multi-line text with same patterns
+
+**Required Props Pattern**:
+```typescript
+interface FormComponentProps {
+  label: string;              // Always visible (accessibility)
+  error?: string;            // Validation error display
+  helperText?: string;       // Explanatory text below field
+  // ...extends InputHTMLAttributes/SelectHTMLAttributes
+}
+```
+
+**Mandatory Styling Standards**:
+- **Height**: `py-3` (taller fields, easier to click)
+- **Padding**: `px-4` (text not cramped)
+- **Text Size**: `text-base` (NOT `text-sm` - too small)
+- **Border**: `border-2 border-gray-400` (visible contrast)
+- **Background**: `bg-gray-50` (differentiates from white page background)
+- **Hover**: `hover:border-gray-500 hover:bg-white` (interactive feedback)
+- **Focus**: `focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:bg-white` (clear active state)
+- **Transitions**: `transition-colors duration-200` (smooth state changes)
+- **Label**: `text-base font-semibold mb-2 block` (NOT `text-sm` - too small)
+- **Error State**: `border-red-400` with red text below
+- **Disabled**: `bg-gray-100 cursor-not-allowed opacity-60`
+
+**Usage Rules**:
+- ✅ USE: `<FormInput label="Nome" value={name} onChange={...} />`
+- ❌ NEVER: Copy-paste `<input className="...lots of tailwind..." />` across files
+- ✅ USE: `helperText` prop for inline guidance
+- ❌ NEVER: Separate `<p className="text-sm">` for help text
+- ✅ USE: `error` prop for validation feedback
+- ❌ NEVER: Conditional `<div>` for error rendering
+
+**Accessibility Requirements**:
+- Every input MUST have a visible label (no placeholder-only)
+- Labels MUST be associated with inputs (via `htmlFor` / `id`)
+- Error messages MUST be programmatically linked (aria-describedby)
+- Focus states MUST be clearly visible (ring + border color change)
+- Color MUST NOT be the only indicator (use icons + text for errors)
+
+**When to Create New Form Component**:
+1. Pattern is used in 2+ forms → Extract to component
+2. Styling is complex (5+ Tailwind classes) → Extract to component
+3. Logic is reusable (date picker, file upload) → Extract to component
+
+**Migration Path**:
+- When touching a form, migrate ALL fields to reusable components
+- Do not leave mixed legacy `<input>` and new `<FormInput>` in same form
+- Document custom styling needs with TODO comment if component doesn't support it yet
 
 ## Development Standards
 
@@ -160,12 +231,31 @@ eventos-bff/
   - Columns: snake_case (`instance_id`, `created_at`, `full_name`)
   - Indexes: descriptive (`idx_users_instance_id`)
 - **TypeScript/React**:
-  - Components: PascalCase (`AdminLayout`, `InstanceForm`)
-  - Files: Match component name (`AdminLayout.tsx`)
+  - Components: PascalCase (`AdminLayout`, `InstanceForm`, `FormInput`)
+  - Files: Match component name (`AdminLayout.tsx`, `FormInput.tsx`)
   - Interfaces: PascalCase (`User`, `Instance`, `Event`)
   - Functions: camelCase (`loadUsers`, `handleSubmit`)
   - Hooks: `use` prefix (`useAuth`, `useSupabase`)
 - **URLs/Routes**: kebab-case (`/admin/instances/new`, `/organizer/events`)
+
+### UI/UX Consistency Standards
+- **Forms**: ALL forms MUST use `FormInput`, `FormSelect`, `FormTextarea` components
+- **Buttons**: Consistent sizing and colors:
+  - Primary action: `bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 text-base`
+  - Secondary: `bg-gray-200 hover:bg-gray-300 text-gray-900`
+  - Danger: `bg-red-600 hover:bg-red-700 text-white`
+- **Contrast**: WCAG AA minimum (4.5:1 for text, 3:1 for UI components)
+- **Touch Targets**: Min 44x44px (WCAG, Apple HIG, Material Design)
+- **Spacing**: Consistent with Tailwind scale (px-4, py-3, gap-4, space-y-4)
+- **Typography**: 
+  - Headings: `text-2xl font-bold` (page title), `text-xl font-semibold` (section)
+  - Body: `text-base` (default), `text-sm` only for metadata/captions
+  - Labels: `text-base font-semibold` (form labels must be readable)
+- **Colors**: Use Tailwind semantic colors (indigo for primary, red for danger, gray for neutral)
+- **Icons**: Consistent library (Heroicons recommended with Tailwind)
+- **Loading States**: Spinner + descriptive text ("Carregando...")
+- **Empty States**: Friendly message + action button
+- **Error States**: Red border + icon + descriptive message
 
 ### Migration Protocol
 1. **Create migration**: `supabase/migrations/00X_descriptive_name.sql`
@@ -313,4 +403,4 @@ USING (
 - Complexity must be justified against Principles (especially Multi-Tenant Isolation, Security-First)
 - Use `.specify/templates/` for consistent planning, specs, and task breakdown
 
-**Version**: 1.0.0 | **Ratified**: 2026-02-16 | **Last Amended**: 2026-02-16
+**Version**: 1.1.0 | **Ratified**: 2026-02-16 | **Last Amended**: 2026-02-16
