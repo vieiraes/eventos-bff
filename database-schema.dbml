@@ -10,6 +10,8 @@
 // - Funções helper de segurança: is_superadmin(), get_user_instance_id(), get_user_role()
 // - Políticas RLS atualizadas para evitar recursão infinita
 // - Integração com Supabase Auth via triggers (handle_new_user, handle_user_update)
+// - [Migration 002] Trigger prevent_instance_migration: impede migração de user entre instâncias
+// - [Migration 003] Soft Delete: coluna deleted_at na tabela users + RLS policies atualizadas
 // ============================================
 
 // ============================================
@@ -52,6 +54,9 @@ Table users {
   role varchar [not null, default: 'attendee', note: 'superadmin, organizer, staff, attendee, speaker, vip']
   status varchar [not null, default: 'active', note: 'active, inactive, blocked']
   
+  // Soft Delete (Migration 003)
+  deleted_at timestamp [null, note: 'Soft delete: quando preenchido, usuário está deletado. NULL = ativo']
+  
   metadata jsonb [note: 'Dados adicionais flexíveis (dietary_restrictions, special_needs, etc)']
   last_login_at timestamp
   created_at timestamp [default: `now()`]
@@ -62,6 +67,7 @@ Table users {
     instance_id
     (instance_id, role)
     document_number
+    deleted_at [note: 'Índice parcial: WHERE deleted_at IS NULL (performance em queries de usuários ativos)']
   }
   
   Note: 'Usuários do sistema - TUDO é user (participantes, organizadores, staff, palestrantes, vip)'
