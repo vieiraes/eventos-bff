@@ -16,6 +16,7 @@ interface UserWithInstance {
 export function AdminUsers() {
   const [users, setUsers] = useState<UserWithInstance[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const [filter, setFilter] = useState<string>('all')
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export function AdminUsers() {
           created_at,
           instances (slug)
         `)
+        .is('deleted_at', null) // Filtro explícito: apenas usuários não deletados
         .order('created_at', { ascending: false })
 
       if (filter !== 'all') {
@@ -94,6 +96,30 @@ export function AdminUsers() {
       month: '2-digit',
       year: '2-digit',
     })
+  }
+
+  const handleDelete = async (userId: string, userName: string) => {
+    if (!confirm(`Tem certeza que deseja desativar o usuário "${userName}"? Esta ação pode ser revertida posteriormente.`)) {
+      return
+    }
+
+    setDeleting(userId)
+    try {
+      // Chama a função soft_delete_user do banco de dados
+      const { error } = await supabase.rpc('soft_delete_user', {
+        user_id: userId
+      })
+
+      if (error) throw error
+
+      // Recarrega a lista (usuário deletado não aparecerá mais)
+      await loadUsers()
+    } catch (error: any) {
+      console.error('Error deleting user:', error)
+      alert(`Erro ao desativar usuário: ${error.message}`)
+    } finally {
+      setDeleting(null)
+    }
   }
 
   return (
@@ -210,12 +236,21 @@ export function AdminUsers() {
                             </svg>
                           </Link>
                           <button 
-                            className="text-red-600 hover:text-red-900"
+                            onClick={() => handleDelete(user.id, user.full_name)}
+                            disabled={deleting === user.id}
+                            className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Desativar usuário"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
+                            {deleting === user.id ? (
+                              <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                            )}
                           </button>
                         </>
                       ) : (

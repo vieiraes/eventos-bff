@@ -63,6 +63,7 @@ export function OrganizerForm() {
         .from('users')
         .select('*, instances(*)')
         .eq('id', userId)
+        .is('deleted_at', null) // Não carregar usuários deletados
         .single()
 
       if (error) throw error

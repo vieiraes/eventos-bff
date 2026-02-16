@@ -42,12 +42,14 @@ export function AdminDashboard() {
       const { count: usersCount } = await supabase
         .from('users')
         .select('*', { count: 'exact', head: true })
+        .is('deleted_at', null) // Apenas usuários ativos
 
       // Count organizers (instance admins)
       const { count: organizersCount } = await supabase
         .from('users')
         .select('*', { count: 'exact', head: true })
         .eq('role', 'organizer')
+        .is('deleted_at', null) // Apenas organizers ativos
 
       setStats({
         totalInstances: instancesCount || 0,
