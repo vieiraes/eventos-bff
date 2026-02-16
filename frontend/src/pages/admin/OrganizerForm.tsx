@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 import { createClient } from '@supabase/supabase-js'
 import { AdminLayout } from '../../components/AdminLayout'
+import { FormInput } from '../../components/FormInput'
+import { FormSelect } from '../../components/FormSelect'
 import type { Instance } from '../../types'
 
 export function OrganizerForm() {
@@ -143,53 +145,35 @@ export function OrganizerForm() {
             )}
 
             {/* Tipo de Usuário */}
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Tipo de Usuário *
-              </label>
-              <select
-                id="role"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                value={formData.role}
-                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as 'superadmin' | 'organizer', instance_id: e.target.value === 'superadmin' ? '' : prev.instance_id }))}
-              >
-                <option value="organizer">Organizer - Administra uma instância específica</option>
-                <option value="superadmin">SuperAdmin - Acesso total ao sistema</option>
-              </select>
-              <p className="mt-1 text-sm text-gray-500">
-                {formData.role === 'superadmin' 
-                  ? '🔑 SuperAdmin pode gerenciar todas as instâncias, usuários e configurações globais' 
-                  : '🏢 Organizer gerencia eventos e usuários apenas de sua instância'}
-              </p>
-            </div>
+            <FormSelect
+              label="Tipo de Usuário *"
+              required
+              value={formData.role}
+              onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as 'superadmin' | 'organizer', instance_id: e.target.value === 'superadmin' ? '' : prev.instance_id }))}
+              helperText={formData.role === 'superadmin' 
+                ? '🔑 SuperAdmin pode gerenciar todas as instâncias, usuários e configurações globais' 
+                : '🏢 Organizer gerencia eventos e usuários apenas de sua instância'}
+            >
+              <option value="organizer">Organizer - Administra uma instância específica</option>
+              <option value="superadmin">SuperAdmin - Acesso total ao sistema</option>
+            </FormSelect>
 
             {/* Instância (apenas para Organizer) */}
             {formData.role === 'organizer' && (
-              <div>
-                <label htmlFor="instance_id" className="block text-sm font-medium text-gray-700">
-                  Instância (Empresa) *
-                </label>
-                <select
-                  id="instance_id"
-                  required={formData.role === 'organizer'}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  value={formData.instance_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, instance_id: e.target.value }))}
-                >
-                  <option value="">Selecione uma instância</option>
-                  {instances.map(instance => (
-                    <option key={instance.id} value={instance.id}>
-                      {instance.name} ({instance.type})
-                    </option>
-                  ))}
-                </select>
-                {selectedInstance && (
-                  <p className="mt-1 text-sm text-gray-500">
-                    Tipo: <span className="font-medium">{selectedInstance.type}</span>
-                  </p>
-                )}
-              </div>
+              <FormSelect
+                label="Instância (Empresa) *"
+                required={formData.role === 'organizer'}
+                value={formData.instance_id}
+                onChange={(e) => setFormData(prev => ({ ...prev, instance_id: e.target.value }))}
+                helperText={selectedInstance ? `Tipo: ${selectedInstance.type}` : undefined}
+              >
+                <option value="">Selecione uma instância</option>
+                {instances.map(instance => (
+                  <option key={instance.id} value={instance.id}>
+                    {instance.name} ({instance.type})
+                  </option>
+                ))}
+              </FormSelect>
             )}
 
             {/* Dados Pessoais */}
@@ -197,77 +181,47 @@ export function OrganizerForm() {
               <h3 className="text-lg font-medium text-gray-900 mb-4">Dados Pessoais</h3>
               
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">
-                    Nome Completo *
-                  </label>
-                  <input
-                    type="text"
-                    id="full_name"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="Ex: Carlos Silva"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-                  />
-                </div>
+                <FormInput
+                  label="Nome Completo *"
+                  type="text"
+                  required
+                  placeholder="Ex: Carlos Silva"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                />
 
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="carlos@multieventos.com.br"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  />
-                </div>
+                <FormInput
+                  label="Email *"
+                  type="email"
+                  required
+                  placeholder="carlos@multieventos.com.br"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                />
 
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                    Telefone (Opcional)
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="+55 27 99999-0000"
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  />
-                </div>
+                <FormInput
+                  label="Telefone (Opcional)"
+                  type="tel"
+                  placeholder="+55 27 99999-0000"
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                />
 
-                <div>
-                  <label htmlFor="company" className="block text-sm font-medium text-gray-700">
-                    Empresa (Opcional)
-                  </label>
-                  <input
-                    type="text"
-                    id="company"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="Ex: MultiEventos"
-                    value={formData.company}
-                    onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
-                  />
-                </div>
+                <FormInput
+                  label="Empresa (Opcional)"
+                  type="text"
+                  placeholder="Ex: MultiEventos"
+                  value={formData.company}
+                  onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                />
 
-                <div>
-                  <label htmlFor="position" className="block text-sm font-medium text-gray-700">
-                    Cargo (Opcional)
-                  </label>
-                  <input
-                    type="text"
-                    id="position"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="Ex: CEO, Diretor"
-                    value={formData.position}
-                    onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
-                  />
-                </div>
+                <FormInput
+                  label="Cargo (Opcional)"
+                  type="text"
+                  placeholder="Ex: CEO, Diretor"
+                  value={formData.position}
+                  onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
+                />
               </div>
             </div>
 
@@ -276,37 +230,25 @@ export function OrganizerForm() {
               <h3 className="text-lg font-medium text-gray-900 mb-4">Senha de Acesso</h3>
               
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Senha *
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    required
-                    minLength={6}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="Mínimo 6 caracteres"
-                    value={formData.password}
-                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  />
-                </div>
+                <FormInput
+                  label="Senha *"
+                  type="password"
+                  required
+                  minLength={6}
+                  placeholder="Mínimo 6 caracteres"
+                  value={formData.password}
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                />
 
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                    Confirmar Senha *
-                  </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    required
-                    minLength={6}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="Digite a senha novamente"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  />
-                </div>
+                <FormInput
+                  label="Confirmar Senha *"
+                  type="password"
+                  required
+                  minLength={6}
+                  placeholder="Digite a senha novamente"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                />
               </div>
             </div>
 

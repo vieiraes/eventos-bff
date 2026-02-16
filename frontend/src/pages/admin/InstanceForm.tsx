@@ -2,6 +2,8 @@ import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 import { AdminLayout } from '../../components/AdminLayout'
+import { FormInput } from '../../components/FormInput'
+import { FormSelect } from '../../components/FormSelect'
 
 export function InstanceForm() {
   const navigate = useNavigate()
@@ -182,95 +184,63 @@ export function InstanceForm() {
           )}
 
           {/* Nome */}
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Nome da Empresa *
-            </label>
-            <input
-              type="text"
-              id="name"
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              placeholder="Ex: MultiEventos Professional"
-              value={formData.name}
-              onChange={(e) => handleNameChange(e.target.value)}
-            />
-          </div>
+          <FormInput
+            label="Nome da Empresa *"
+            type="text"
+            required
+            placeholder="Ex: MultiEventos Professional"
+            value={formData.name}
+            onChange={(e) => handleNameChange(e.target.value)}
+          />
 
           {/* Slug */}
-          <div>
-            <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
-              Slug (URL) *
-            </label>
-            <input
-              type="text"
-              id="slug"
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              placeholder="multieventos-professional"
-              value={formData.slug}
-              onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-            />
-            <p className="mt-1 text-sm text-gray-500">Gerado automaticamente, mas pode ser editado</p>
-          </div>
+          <FormInput
+            label="Slug (URL) *"
+            type="text"
+            required
+            placeholder="multieventos-professional"
+            value={formData.slug}
+            onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+            helperText="Gerado automaticamente, mas pode ser editado"
+          />
 
           {/* Tipo e Status */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="type" className="block text-sm font-medium text-gray-700">
-                Tipo de Plano *
-              </label>
-              <select
-                id="type"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                value={formData.type}
-                onChange={(e) => handleTypeChange(e.target.value as any)}
-              >
-                <option value="standard">Standard (10 eventos)</option>
-                <option value="premium">Premium (20 eventos)</option>
-                <option value="enterprise">Enterprise (50 eventos)</option>
-              </select>
-              <p className="mt-1 text-sm text-gray-500">O limite de eventos é ajustado automaticamente</p>
-            </div>
+            <FormSelect
+              label="Tipo de Plano *"
+              required
+              value={formData.type}
+              onChange={(e) => handleTypeChange(e.target.value as any)}
+              helperText="O limite de eventos é ajustado automaticamente"
+            >
+              <option value="standard">Standard (10 eventos)</option>
+              <option value="premium">Premium (20 eventos)</option>
+              <option value="enterprise">Enterprise (50 eventos)</option>
+            </FormSelect>
 
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                Status *
-              </label>
-              <select
-                id="status"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
-              >
-                <option value="active">Ativo</option>
-                <option value="suspended">Suspenso</option>
-                <option value="cancelled">Cancelado</option>
-              </select>
-            </div>
+            <FormSelect
+              label="Status *"
+              required
+              value={formData.status}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
+            >
+              <option value="active">Ativo</option>
+              <option value="suspended">Suspenso</option>
+              <option value="cancelled">Cancelado</option>
+            </FormSelect>
           </div>
 
           {/* Max Eventos */}
-          <div>
-            <label htmlFor="max_events" className="block text-sm font-medium text-gray-700">
-              Máximo de Eventos *
-            </label>
-            <input
-              type="number"
-              id="max_events"
-              min="1"
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              placeholder="50"
-              value={formData.max_events}
-              onChange={(e) => setFormData(prev => ({ ...prev, max_events: e.target.value }))}
-            />
-            <p className="mt-1 text-sm text-gray-500">
-              Deixe 0 para infinito. O recomendado é usar os limites pré-definidos por tipo de plano, mas você pode customizar aqui.
-            </p>
-          </div>
+          <FormInput
+            label="Máximo de Eventos *"
+            type="number"
+            min="1"
+            required
+            placeholder="50"
+            value={formData.max_events}
+            onChange={(e) => setFormData(prev => ({ ...prev, max_events: e.target.value }))}
+            helperText="Deixe 0 para infinito. O recomendado é usar os limites pré-definidos por tipo de plano, mas você pode customizar aqui."
+          />
 
           {/* Features */}
           <div className="opacity-60">
