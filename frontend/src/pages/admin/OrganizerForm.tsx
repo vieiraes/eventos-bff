@@ -1,6 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { AdminLayout } from '../../components/AdminLayout'
 import type { Instance } from '../../types'
 
@@ -68,11 +69,21 @@ export function OrganizerForm() {
     setLoading(true)
 
     try {
-      // 1. Salvar sessão atual do SuperAdmin antes de criar novo usuário
-      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      // 1. Criar cliente Supabase ANÔNIMO para criar usuário sem afetar sessão atual
+      // Usando as mesmas credenciais mas com persistSession: false
+      const anonClient = createClient(
+        'https://jhzqdelkyghibyylrupx.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoenFkZWxreWdoaWJ5eWxydXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNTQxNzAsImV4cCI6MjA4NjgzMDE3MH0.0y59gzHWws4Qs4AJcamRfM85_YeF0U6c5TEjPDh1-Ec',
+        {
+          auth: {
+            persistSession: false, // NÃO persistir sessão (muito importante!)
+            autoRefreshToken: false,
+          }
+        }
+      )
       
-      // 2. Criar usuário no Supabase Auth (isso vai logar automaticamente o novo usuário)
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // 2. Criar usuário usando cliente anônimo (não afeta sessão do SuperAdmin)
+      const { data: authData, error: authError } = await anonClient.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -87,7 +98,7 @@ export function OrganizerForm() {
       if (authError) throw authError
       if (!authData.user) throw new Error('Erro ao criar usuário')
 
-      // 3. Atualizar o registro em public.users com dados adicionais
+      // 3. Atualizar dados adicionais usando o cliente principal (com sessão do SuperAdmin)
       const { error: updateError } = await supabase
         .from('users')
         .update({
@@ -99,14 +110,6 @@ export function OrganizerForm() {
 
       if (updateError) throw updateError
 
-      // 4. IMPORTANTE: Restaurar a sessão do SuperAdmin
-      if (currentSession) {
-        await supabase.auth.setSession({
-          access_token: currentSession.access_token,
-          refresh_token: currentSession.refresh_token,
-        })
-      }
-
       alert(`✅ Usuário criado com sucesso!
       
 📧 Email: ${formData.email}
@@ -115,9 +118,8 @@ export function OrganizerForm() {
 🎯 Role: ${formData.role}
 ${formData.role === 'organizer' ? `🏢 Instância: ${selectedInstance?.name}` : ''}
 
-⚠️ IMPORTANTE: 
-- Se o login falhar, verifique no Supabase se "Email Confirmation" está DESABILITADO
-- Authentication → Providers → Email → Confirm email: OFF`)
+✅ Você continua logado como SuperAdmin
+`)
       
       navigate('/admin/users')
     } catch (err: any) {
