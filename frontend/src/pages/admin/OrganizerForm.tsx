@@ -234,10 +234,15 @@ export function OrganizerForm() {
               label="Tipo de Usuário *"
               required
               value={formData.role}
+              disabled={isEditing}
               onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as 'superadmin' | 'organizer', instance_id: e.target.value === 'superadmin' ? '' : prev.instance_id }))}
-              helperText={formData.role === 'superadmin' 
-                ? '🔑 SuperAdmin pode gerenciar todas as instâncias, usuários e configurações globais' 
-                : '🏢 Organizer gerencia eventos e usuários apenas de sua instância'}
+              helperText={
+                isEditing 
+                  ? '🔒 O tipo de usuário não pode ser alterado. Para mudanças, crie um novo usuário.'
+                  : (formData.role === 'superadmin' 
+                    ? '🔑 SuperAdmin pode gerenciar todas as instâncias, usuários e configurações globais' 
+                    : '🏢 Organizer gerencia eventos e usuários apenas de sua instância')
+              }
             >
               <option value="organizer">Organizer - Administra uma instância específica</option>
               <option value="superadmin">SuperAdmin - Acesso total ao sistema</option>
@@ -245,20 +250,34 @@ export function OrganizerForm() {
 
             {/* Instância (apenas para Organizer) */}
             {formData.role === 'organizer' && (
-              <FormSelect
-                label="Instância (Empresa) *"
-                required={formData.role === 'organizer'}
-                value={formData.instance_id}
-                onChange={(e) => setFormData(prev => ({ ...prev, instance_id: e.target.value }))}
-                helperText={selectedInstance ? `Tipo: ${selectedInstance.type}` : undefined}
-              >
-                <option value="">Selecione uma instância</option>
-                {instances.map(instance => (
-                  <option key={instance.id} value={instance.id}>
-                    {instance.name} ({instance.type})
-                  </option>
-                ))}
-              </FormSelect>
+              <>
+                {isEditing && formData.instance_id ? (
+                  /* Modo Edição: Instância é READ-ONLY (não pode migrar) */
+                  <FormInput
+                    label="Instância (Empresa) *"
+                    type="text"
+                    value={selectedInstance?.name || 'Carregando...'}
+                    disabled
+                    helperText="⚠️ Não é possível alterar a instância de um Organizer. Se necessário, exclua este usuário e crie um novo."
+                  />
+                ) : (
+                  /* Modo Criação: Selecione a instância */
+                  <FormSelect
+                    label="Instância (Empresa) *"
+                    required={formData.role === 'organizer'}
+                    value={formData.instance_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, instance_id: e.target.value }))}
+                    helperText={selectedInstance ? `Tipo: ${selectedInstance.type}` : 'Selecione a empresa que este Organizer irá gerenciar'}
+                  >
+                    <option value="">Selecione uma instância</option>
+                    {instances.map(instance => (
+                      <option key={instance.id} value={instance.id}>
+                        {instance.name} ({instance.type})
+                      </option>
+                    ))}
+                  </FormSelect>
+                )}
+              </>
             )}
 
             {/* Dados Pessoais */}
