@@ -12,6 +12,7 @@
 // - Integração com Supabase Auth via triggers (handle_new_user, handle_user_update)
 // - [Migration 002] Trigger prevent_instance_migration: impede migração de user entre instâncias
 // - [Migration 003] Soft Delete: coluna deleted_at na tabela users + RLS policies atualizadas
+// - [Migration 004] Fix handle_new_user: melhor tratamento de instance_id (validação UUID robusta)
 // ============================================
 
 // ============================================

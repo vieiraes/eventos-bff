@@ -9,6 +9,7 @@ interface UserWithInstance {
   full_name: string
   role: string
   status: string
+  instance_id: string | null
   created_at: string
   instance_slug: string | null
 }
@@ -33,8 +34,9 @@ export function AdminUsers() {
           full_name,
           role,
           status,
+          instance_id,
           created_at,
-          instances (slug)
+          instances!instance_id (slug)
         `)
         .is('deleted_at', null) // Filtro explícito: apenas usuários não deletados
         .order('created_at', { ascending: false })
