@@ -2,26 +2,31 @@
 
 <!--
 Sync Impact Report:
-Version: 1.1.0 → Previous: 1.0.0
+Version: 1.2.0 → Previous: 1.1.0
 Last Amended: 2026-02-16
 Changes:
-  - EXPANDED Principle VII: Added UX Standards and Form Component Guidelines
-  - NEW SECTION: Form Component Patterns with specific styling requirements
-  - Added accessibility and contrast requirements
-  - Documented reusable component props pattern (label, error, helperText)
-  - Added Development Standards for UI/UX consistency
+  - EXPANDED Principle II: Added DBML synchronization requirement (MANDATORY)
+  - NEW PRINCIPLE VIII: Data Integrity & Business Rules (triggers, soft delete)
+  - Added Migration Protocol: DBML update is now mandatory step
+  - Documented Soft Delete Pattern with deleted_at column standard
+  - Added Trigger-Based Business Rules pattern (prevent_instance_migration example)
+  - Updated Business Logic Constraints with instance migration prevention rule
 Modified Principles:
-  - Principle VII (Component Composition & Reusability): Materially expanded with UX guidelines
+  - Principle II (Schema-First Design): Added DBML sync requirement with rationale
+  - Migration Protocol: DBML update now step #2 (immediately after migration creation)
+  - Business Logic Constraints: Added User Management Rules → Instance Migration Prevention
 Added Sections:
-  - Form Component Patterns under Principle VII
-  - UI/UX consistency guidelines in Development Standards
+  - NEW Principle VIII: Data Integrity & Business Rules
+  - Soft Delete Pattern (deleted_at column standard)
+  - Trigger-Based Business Rules (database-enforced constraints)
 Templates Status:
   - ✅ plan-template.md: Aligned
-  - ✅ spec-template.md: Aligned
-  - ✅ tasks-template.md: Should verify UX testing tasks included
+  - ✅ spec-template.md: Should verify migration checklist includes DBML update
+  - ✅ tasks-template.md: Should add "Verify DBML sync" task type
 Follow-up:
-  - ⚠ tasks-template.md: Verify includes "Test form UX consistency" task type
-  - ⚠ Apply FormInput/FormSelect to remaining forms (Login, Register if exist)
+  - ⚠ spec-template.md: Add DBML sync reminder to migration sections
+  - ⚠ tasks-template.md: Add task type "Update DBML documentation"
+  - ⚠ Implement restore user UI (soft_delete_user/restore_user functions exist)
 -->
 
 ## Core Principles
@@ -41,12 +46,14 @@ Follow-up:
 **Principle**: Database schema is the source of truth; frontend adapts to backend.
 
 - Changes start with migration files in `supabase/migrations/`
-- DBML schema (`database-schema.dbml`) must be updated with every schema change
+- **DBML schema (`database-schema.dbml`) MUST be updated IMMEDIATELY with every schema change** (NON-NEGOTIABLE)
 - TypeScript interfaces in `frontend/src/types/` must mirror database schema exactly
 - No feature implementation without corresponding database schema
 - Schema changes require migration + DBML update + TypeScript types update
+- **DBML is the visual source of truth**: Used to understand and validate what exists in Supabase
+- DBML update is NOT optional, NOT deferred - it must happen in the same commit as the migration
 
-**Rationale**: Database is persistent, centralized truth. Frontend is ephemeral UI representation. Decoupling reduces bugs and enables multiple frontends.
+**Rationale**: Database is persistent, centralized truth. Frontend is ephemeral UI representation. Decoupling reduces bugs and enables multiple frontends. **DBML documentation prevents schema drift and serves as the primary visualization tool for understanding database structure - out-of-sync DBML leads to incorrect assumptions and bugs.**
 
 ### III. Security-First (RLS Policies)
 **Principle**: Security is enforced at database level through Row Level Security.
@@ -106,6 +113,8 @@ Follow-up:
 **Principle**: Build UI from composable, reusable components with consistent UX.
 
 **Patterns**:
+
+**Patterns**:
 - Layout components: `AdminLayout`, `OrganizerLayout` (role-specific shells)
 - Route guards: `AdminRoute`, `OrganizerRoute` (enforce role access)
 - Shared components: Form inputs, tables, badges, modals (DRY principle)
@@ -120,6 +129,72 @@ Follow-up:
 - **UX consistency MUST be enforced through reusable components, not copy-paste**
 
 **Rationale**: Reusability reduces bugs, speeds development, ensures UI consistency. Small focused components are easier to test and maintain. Inconsistent UX damages user trust and increases cognitive load.
+
+### VIII. Data Integrity & Business Rules
+**Principle**: Critical business rules are enforced at the database level through triggers and constraints.
+
+**Patterns**:
+- **Soft Delete**: Use `deleted_at TIMESTAMPTZ NULL` column instead of hard deletes
+- **Trigger-Based Rules**: Complex business rules implemented as BEFORE/AFTER triggers
+- **Check Constraints**: Simple validations at column level (e.g., `CHECK (status IN (...))`)
+- **Foreign Key Constraints**: Referential integrity with appropriate ON DELETE actions
+- **RLS Policies**: Updated to filter deleted records (`WHERE deleted_at IS NULL`)
+
+**Rules**:
+- Users table MUST use soft delete pattern (preserve data for audit/restore)
+- All queries for active records MUST explicitly filter `deleted_at IS NULL`
+- RLS policies MUST include deleted_at filters (except restore/audit operations)
+- Business rules that prevent invalid states MUST be triggers (not just frontend validation)
+- Triggers return descriptive error messages for frontend display
+- Functions for privileged operations: `soft_delete_user()`, `restore_user()` with SECURITY DEFINER
+
+**Soft Delete Standard**:
+```sql
+-- Column definition
+deleted_at TIMESTAMPTZ NULL
+
+-- Partial index for performance (only indexes active records)
+CREATE INDEX idx_users_deleted_at ON users(deleted_at) WHERE deleted_at IS NULL;
+
+-- RLS policy pattern
+CREATE POLICY "active_users_only" ON users FOR SELECT
+USING (deleted_at IS NULL AND <other conditions>);
+
+-- Soft delete function
+CREATE OR REPLACE FUNCTION soft_delete_user(user_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE users SET deleted_at = NOW() WHERE id = user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+**Trigger-Based Business Rules**:
+```sql
+-- Example: Prevent instance migration after assignment
+CREATE OR REPLACE FUNCTION prevent_instance_migration()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.instance_id IS NOT NULL AND NEW.instance_id != OLD.instance_id THEN
+    RAISE EXCEPTION 'Não é permitido migrar usuário entre instâncias';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER prevent_instance_migration_trigger
+BEFORE UPDATE ON users
+FOR EACH ROW
+EXECUTE FUNCTION prevent_instance_migration();
+```
+
+**When to Use Triggers vs Frontend Validation**:
+- ✅ **Trigger**: Data integrity rules (prevent migration, cascade updates, audit logs)
+- ✅ **Trigger**: Rules that must survive admin/API access bypassing frontend
+- ✅ **Frontend**: UX feedback (disable fields, show warnings before attempting)
+- ❌ **Never**: Trust frontend alone for business-critical rules
+
+**Rationale**: Database triggers provide last line of defense for business rules. Frontend can be bypassed (API, admin tools, SQL client). Soft delete preserves data for audit trails, compliance, and recovery. Triggers + frontend validation = defense in depth.
 
 #### Form Component Patterns (MANDATORY)
 
@@ -257,19 +332,37 @@ eventos-bff/
 - **Empty States**: Friendly message + action button
 - **Error States**: Red border + icon + descriptive message
 
-### Migration Protocol
+### Migration Protocol (MANDATORY CHECKLIST)
 1. **Create migration**: `supabase/migrations/00X_descriptive_name.sql`
-2. **Update DBML**: Reflect changes in `database-schema.dbml`
+2. **Update DBML IMMEDIATELY**: Reflect changes in `database-schema.dbml` (same commit)
+   - Add/modify table definitions
+   - Add/modify column definitions with notes
+   - Add/modify indexes with performance notes
+   - Update header comment with migration number and brief description
 3. **Apply migration**: Use Supabase MCP (`mcp_com_supabase__execute_sql`)
 4. **Update types**: Sync `frontend/src/types/index.ts` with new schema
 5. **Document**: Add entry to `DATABASE_STATUS.md`
-6. **Test**: Verify RLS policies still work correctly
+6. **Test RLS**: Verify policies work correctly with new schema
+7. **Test Queries**: Ensure existing queries work (especially if added deleted_at filter)
+8. **Commit**: Single atomic commit with migration + DBML + types
+
+**DBML Update Requirements**:
+- ✅ **Always**: Column additions/removals/modifications
+- ✅ **Always**: Index additions/removals
+- ✅ **Always**: Constraint changes (foreign keys, checks)
+- ✅ **Always**: Trigger additions (documented in header comment)
+- ✅ **Always**: Table additions/removals
+- ⚠️ **Document in header**: RLS policy changes (too verbose for DBML)
+- ⚠️ **Document in header**: Function additions (link to migration file)
 
 **Never**:
 - ❌ Modify production data directly
 - ❌ Run migrations that haven't been tested locally
-- ❌ Skip DBML or TypeScript type updates
+- ❌ Skip DBML update (even "small" changes must be documented)
+- ❌ Defer DBML update to "later" (it never happens)
+- ❌ Skip TypeScript type updates
 - ❌ Forget to test RLS policies after schema changes
+- ❌ Commit migration without corresponding DBML changes
 
 ## Security Requirements
 
@@ -365,10 +458,32 @@ USING (
   - ✅ Create other superadmins (for partners)
   - ✅ Create/edit organizers (instance admins)
   - 👀 View all users (read-only for staff/speaker/vip/attendee)
+  - ✅ Soft delete users (marks deleted_at timestamp)
+  - ✅ Restore deleted users (clears deleted_at)
 - Organizer can:
   - ✅ Create/edit events (only in their instance)
   - ✅ Manage all user types within their instance
   - ❌ Cannot see other instances
+  - ✅ Soft delete users in their instance
+
+### Instance Migration Prevention (NON-NEGOTIABLE)
+**Rule**: Once a user is assigned to an instance (`instance_id IS NOT NULL`), they CANNOT be migrated to another instance.
+
+**Enforcement**:
+- **Database Trigger**: `prevent_instance_migration_trigger` blocks UPDATE of `instance_id` if already set
+- **Frontend**: Instance field becomes READ-ONLY in edit mode (shows dropdown value but disabled)
+- **Rationale**: Users accumulate instance-specific data (events, registrations, access). Migration would break referential integrity and cause data inconsistency.
+
+**Allowed Transitions**:
+- ✅ `NULL → UUID`: Assigning SuperAdmin to become Organizer of an instance
+- ❌ `UUID → different UUID`: Migration between instances (blocked by trigger)
+- ❌ `UUID → NULL`: Demoting Organizer back to SuperAdmin (blocked by trigger)
+
+**Error Message**: "Não é permitido migrar usuário entre instâncias"
+
+**Frontend Behavior**:
+- Create mode: Instance dropdown enabled (select any active instance)
+- Edit mode: Instance field shows current instance name as disabled text input (read-only)
 
 ### Registration Lifecycle
 1. **Pre-Registration**: User browses event, adds packages to cart (`registration_items`)
@@ -403,4 +518,4 @@ USING (
 - Complexity must be justified against Principles (especially Multi-Tenant Isolation, Security-First)
 - Use `.specify/templates/` for consistent planning, specs, and task breakdown
 
-**Version**: 1.1.0 | **Ratified**: 2026-02-16 | **Last Amended**: 2026-02-16
+**Version**: 1.2.0 | **Ratified**: 2026-02-16 | **Last Amended**: 2026-02-16
