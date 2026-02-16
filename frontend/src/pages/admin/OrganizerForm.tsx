@@ -68,15 +68,18 @@ export function OrganizerForm() {
     setLoading(true)
 
     try {
-      // 1. Criar usuário no Supabase Auth
+      // 1. Salvar sessão atual do SuperAdmin antes de criar novo usuário
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      
+      // 2. Criar usuário no Supabase Auth (isso vai logar automaticamente o novo usuário)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             full_name: formData.full_name,
-            role: formData.role, // ✅ Passa o role para o trigger usar
-            instance_id: formData.role === 'organizer' ? formData.instance_id : null, // ✅ Passa instance_id
+            role: formData.role,
+            instance_id: formData.role === 'organizer' ? formData.instance_id : null,
           },
         },
       })
@@ -84,7 +87,7 @@ export function OrganizerForm() {
       if (authError) throw authError
       if (!authData.user) throw new Error('Erro ao criar usuário')
 
-      // 2. Atualizar o registro em public.users com dados adicionais
+      // 3. Atualizar o registro em public.users com dados adicionais
       const { error: updateError } = await supabase
         .from('users')
         .update({
@@ -96,6 +99,26 @@ export function OrganizerForm() {
 
       if (updateError) throw updateError
 
+      // 4. IMPORTANTE: Restaurar a sessão do SuperAdmin
+      if (currentSession) {
+        await supabase.auth.setSession({
+          access_token: currentSession.access_token,
+          refresh_token: currentSession.refresh_token,
+        })
+      }
+
+      alert(`✅ Usuário criado com sucesso!
+      
+📧 Email: ${formData.email}
+🔑 Senha: ${formData.password}
+👤 Nome: ${formData.full_name}
+🎯 Role: ${formData.role}
+${formData.role === 'organizer' ? `🏢 Instância: ${selectedInstance?.name}` : ''}
+
+⚠️ IMPORTANTE: 
+- Se o login falhar, verifique no Supabase se "Email Confirmation" está DESABILITADO
+- Authentication → Providers → Email → Confirm email: OFF`)
+      
       navigate('/admin/users')
     } catch (err: any) {
       setError(err.message || 'Erro ao criar usuário')
