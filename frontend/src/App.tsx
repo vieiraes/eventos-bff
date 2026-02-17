@@ -15,6 +15,8 @@ import { OrganizerForm } from './pages/admin/OrganizerForm'
 import { OrganizerDashboard } from './pages/organizer/Dashboard'
 import { OrganizerEvents } from './pages/organizer/Events'
 import { EventForm } from './pages/organizer/EventForm'
+import { OrganizerUsers } from './pages/organizer/Users'
+import { OrganizerUserForm } from './pages/organizer/UserForm'
 
 function App() {
   return (
@@ -132,6 +134,30 @@ function App() {
             element={
               <OrganizerRoute>
                 <EventForm />
+              </OrganizerRoute>
+            }
+          />
+          <Route
+            path="/organizer/users"
+            element={
+              <OrganizerRoute>
+                <OrganizerUsers />
+              </OrganizerRoute>
+            }
+          />
+          <Route
+            path="/organizer/users/new"
+            element={
+              <OrganizerRoute>
+                <OrganizerUserForm />
+              </OrganizerRoute>
+            }
+          />
+          <Route
+            path="/organizer/users/:id/edit"
+            element={
+              <OrganizerRoute>
+                <OrganizerUserForm />
               </OrganizerRoute>
             }
           />

@@ -2,7 +2,7 @@
 
 **Projeto:** Eventos-BFF  
 **Supabase Project ID:** jhzqdelkyghibyylrupx  
-**Última Atualização:** 16/02/2026 - **Migrations Consolidadas em 1 arquivo único**
+**Última Atualização:** 16/02/2026 - **Migration 006 Aplicada: Organizers podem gerenciar registrations**
 
 ---
 
@@ -36,6 +36,45 @@ Migration única que consolida todas as versões anteriores (001 até 005).
 - ✅ Helper functions API (get_user_profile, get_user_events, get_user_access_for_event)
 
 **Migrations antigas** movidas para `_old/` como backup.
+
+---
+
+## 📦 Migrations Incrementais (Pós-Consolidação)
+
+### ✅ 002_prevent_instance_migration.sql - APLICADA
+**Data:** 15/02/2026  
+**Trigger:** `prevent_instance_migration`
+- Impede migração de users entre instâncias (instance_id é imutável após criação)
+- Garante isolamento multi-tenant
+
+### ✅ 003_soft_delete_users.sql - APLICADA
+**Data:** 15/02/2026  
+**Funcionalidades:**
+- Adiciona coluna `deleted_at TIMESTAMPTZ` na tabela users
+- Função `soft_delete_user(user_id UUID)` para marcar deletados
+- RLS policies atualizadas: usuários com `deleted_at IS NOT NULL` são invisíveis
+
+### ✅ 004_fix_handle_new_user_instance_id.sql - APLICADA
+**Data:** 16/02/2026  
+**Fix:** Trigger `handle_new_user` com melhor tratamento de UUID
+- Try/catch para conversão robusta de `instance_id`
+- PostgreSQL WARNING em caso de erro (não bloqueia mais a criação)
+- Validação explícita de NULL
+
+### ✅ 005_organizer_manage_users.sql - APLICADA
+**Data:** 16/02/2026  
+**RLS Policies para Organizers gerenciarem usuários:**
+- `organizers_insert_instance_users` - Criar users (exceto superadmin) na própria instância
+- `organizers_update_instance_users` - Editar users (bloqueia promoção a superadmin)
+- `organizers_delete_instance_users` - Soft delete users (via `soft_delete_user()`)
+- **Use Case:** Resolver problemas durante check-in (corrigir dados, criar cadastros)
+
+### ✅ 006_organizer_manage_registrations.sql - APLICADA
+**Data:** 16/02/2026  
+**RLS Policies para Organizers gerenciarem registrations:**
+- `organizers_create_event_registrations` - Criar registrations (vincular users aos eventos)
+- `organizers_update_event_registrations` - Editar registrations (status, badge_name, etc)
+- **Use Case:** Onboarding rápido durante check-in - vincular user ao evento instantaneamente
 
 ---
 
@@ -99,9 +138,11 @@ Todas com `SECURITY DEFINER` para evitar recursão nas políticas RLS.
 
 ### Organizer pode:
 - ✅ Gerenciar eventos da sua instância
-- ✅ Gerenciar usuários da sua instância
+- ✅ **Criar/editar/deletar usuários da sua instância** (exceto superadmin) - Migration 005
 - ✅ Ver registrations dos seus eventos
+- ❌ Não pode criar/promover para superadmin
 - ❌ Não pode acessar outras instâncias
+- 📋 Use Case: Corrigir dados durante check-in, criar cadastros rápidos
 
 ---
 
@@ -122,6 +163,7 @@ CREATE TABLE users (
   role VARCHAR NOT NULL DEFAULT 'attendee',
   status VARCHAR NOT NULL DEFAULT 'active',
   metadata JSONB,
+  deleted_at TIMESTAMPTZ,  -- Migration 003: Soft delete
   last_login_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
@@ -134,11 +176,15 @@ CREATE TABLE users (
 
 ## 🔄 Próximas Features Planejadas
 
+### ✅ Implementadas (Aguardando commit)
+- [x] **Criação/edição de eventos pelo Organizer** - EventForm.tsx completo
+- [x] **Gerenciamento de usuários pelo Organizer** - Users.tsx + UserForm.tsx
+
 ### Em Desenvolvimento
-- [ ] Criação de eventos pelo Organizer
 - [ ] Formulário de registro de participantes
 - [ ] Checkout e pagamento
 - [ ] Feature flags por plano (settings.features)
+- [ ] Sistema de check-in com QR Code
 
 ### Preparadas (não implementadas)
 - Funcionalidades desabilitadas no InstanceForm:

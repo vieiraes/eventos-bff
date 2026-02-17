@@ -13,6 +13,14 @@
 // - [Migration 002] Trigger prevent_instance_migration: impede migração de user entre instâncias
 // - [Migration 003] Soft Delete: coluna deleted_at na tabela users + RLS policies atualizadas
 // - [Migration 004] Fix handle_new_user: melhor tratamento de instance_id (validação UUID robusta)
+// - [Migration 005] Organizer User Management: RLS policies para INSERT/UPDATE/DELETE de users
+//    - Organizers podem criar users (exceto superadmin) para sua instância
+//    - Organizers podem editar users (sem promover a superadmin, sem migrar instância)
+//    - Organizers podem soft delete users via função soft_delete_user()
+// - [Migration 006] Organizer Registration Management: RLS policies para INSERT/UPDATE de registrations
+//    - Organizers podem criar registrations (vincular users aos eventos da instância)
+//    - Organizers podem editar registrations (status, badge_name, ticket_type)
+//    - Use Case: Onboarding rápido durante check-in
 // ============================================
 
 // ============================================

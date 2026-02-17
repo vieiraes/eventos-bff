@@ -21,6 +21,7 @@ export function OrganizerLayout({ children }: OrganizerLayoutProps) {
   const navigation = [
     { name: 'Dashboard', href: '/organizer', icon: '📊' },
     { name: 'Meus Eventos', href: '/organizer/events', icon: '🎫' },
+    { name: 'Usuários', href: '/organizer/users', icon: '👥' },
   ]
 
   const isActive = (href: string) => {
