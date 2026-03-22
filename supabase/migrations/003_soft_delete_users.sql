@@ -66,7 +66,7 @@ BEGIN
     RAISE EXCEPTION 'Usuário não encontrado ou já está deletado';
   END IF;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 COMMENT ON FUNCTION public.soft_delete_user(UUID) IS 'Soft delete: marca usuário como deletado sem remover do banco';
 
@@ -87,12 +87,12 @@ BEGIN
     RAISE EXCEPTION 'Usuário não encontrado ou não está deletado';
   END IF;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 COMMENT ON FUNCTION public.restore_user(UUID) IS 'Restaura usuário que foi soft deleted';
 
 -- 6. View para facilitar queries (apenas usuários ativos)
-CREATE OR REPLACE VIEW public.active_users AS
+CREATE OR REPLACE VIEW public.active_users WITH (security_invoker = true) AS
 SELECT * FROM public.users
 WHERE deleted_at IS NULL;
 
@@ -130,6 +130,6 @@ BEGIN
   WHERE u.id = auth.uid()
     AND u.deleted_at IS NULL; -- Não retornar perfil de usuário deletado
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 COMMENT ON FUNCTION public.get_user_profile() IS 'API - Retorna perfil completo do usuário autenticado (apenas se não deletado)';

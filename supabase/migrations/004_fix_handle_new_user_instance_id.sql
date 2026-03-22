@@ -59,7 +59,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 COMMENT ON FUNCTION public.handle_new_user() IS 
   'Cria user em public.users quando auth.users é criado. ' ||

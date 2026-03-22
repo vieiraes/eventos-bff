@@ -236,7 +236,7 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
 CREATE TRIGGER update_instances_updated_at BEFORE UPDATE ON instances
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -275,7 +275,7 @@ BEGIN
     AND role = 'superadmin'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION public.get_user_instance_id()
 RETURNS UUID AS $$
@@ -286,7 +286,7 @@ BEGIN
     LIMIT 1
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE OR REPLACE FUNCTION public.get_user_role()
 RETURNS TEXT AS $$
@@ -297,7 +297,7 @@ BEGIN
     LIMIT 1
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- ============================================
 -- AUTH INTEGRATION
@@ -336,7 +336,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Trigger: on_auth_user_created
 CREATE TRIGGER on_auth_user_created
@@ -357,7 +357,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' SET search_path = '';
 
 -- Trigger: on_auth_user_updated
 CREATE TRIGGER on_auth_user_updated
@@ -647,7 +647,7 @@ BEGIN
   LEFT JOIN instances i ON u.instance_id = i.id
   WHERE u.id = auth.uid();
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Function: get_user_events
 CREATE OR REPLACE FUNCTION get_user_events()
@@ -684,7 +684,7 @@ BEGIN
   OR e.status = 'published'
   ORDER BY e.start_date DESC;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Function: get_user_access_for_event
 CREATE OR REPLACE FUNCTION get_user_access_for_event(p_event_id uuid)
@@ -713,7 +713,7 @@ BEGIN
   AND ua.event_id = p_event_id
   AND ua.status = 'active';
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- ============================================
 -- COMMENTS

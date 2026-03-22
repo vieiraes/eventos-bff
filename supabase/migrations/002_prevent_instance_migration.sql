@@ -23,7 +23,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Trigger: Aplica a validação antes de UPDATE
 CREATE TRIGGER prevent_instance_migration_trigger
