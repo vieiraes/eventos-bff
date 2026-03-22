@@ -17,7 +17,7 @@ export function AdminRoute({ children }: AdminRouteProps) {
     )
   }
 
-  if (!user || user.role !== 'superadmin') {
+  if (!user || (user.role !== 'superadmin' && user.role !== 'ADMIN')) {
     return <Navigate to="/" replace />
   }
 

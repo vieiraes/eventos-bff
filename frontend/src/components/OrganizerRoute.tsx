@@ -21,7 +21,7 @@ export function OrganizerRoute({ children }: OrganizerRouteProps) {
     return <Navigate to="/login" replace />
   }
 
-  if (user.role !== 'organizer') {
+  if (user.role !== 'organizer' && user.role !== 'MANAGER') {
     return <Navigate to="/" replace />
   }
 

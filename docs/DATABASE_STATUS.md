@@ -210,6 +210,6 @@ CREATE TABLE users (
 
 ## 📚 Documentação Relacionada
 
-- [README.md](README.md) - Visão geral do projeto
+- [README.md](../README.md) - Visão geral do projeto
 - [LOGINS.md](LOGINS.md) - Credenciais de teste
-- [database-schema.dbml](database-schema.dbml) - Schema visual (DBML)
+- [database-schema.dbml](../database-schema.dbml) - Schema visual (DBML)

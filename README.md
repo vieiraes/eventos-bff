@@ -14,7 +14,7 @@ Sistema SaaS Multi-tenant para Gestão de Eventos Corporativos
 - 🎛️ Dashboard: http://localhost:3000/admin
 
 **Documentação:**
-- 🔑 [Logins e Credenciais](LOGINS.md) - Todos os usuários e como criar novos
+- 🔑 [Logins e Credenciais](docs/LOGINS.md) - Todos os usuários e como criar novos
 - 💻 [Frontend](frontend/README.md) - Documentação React + TypeScript
 - 🗄️ [Database](supabase/README.md) - Migrations e Supabase
 
@@ -465,7 +465,7 @@ GROUP BY e.id, e.name, e.status;
 ## 📚 Documentação
 
 ### Documentação Interna
-- **[LOGINS.md](LOGINS.md)** - Credenciais e guia de acesso (SuperAdmin, usuários seed, como criar novos)
+- **[LOGINS.md](docs/LOGINS.md)** - Credenciais e guia de acesso (SuperAdmin, usuários seed, como criar novos)
 - **[frontend/README.md](frontend/README.md)** - Documentação completa do frontend React
 - **[supabase/README.md](supabase/README.md)** - Instruções do Supabase e migrations
 - **database-schema.dbml** - Schema visual (importar em https://dbdiagram.io)

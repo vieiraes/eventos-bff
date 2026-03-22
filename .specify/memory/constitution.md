@@ -276,7 +276,8 @@ interface FormComponentProps {
 eventos-bff/
 ├── .specify/                    # Spec Kit templates & memory
 │   ├── templates/              # Constitution, plan, spec templates
-│   └── memory/                 # Project-specific filled templates
+│   ├── memory/                 # Project-specific filled templates
+│   └── scripts/                # Automation scripts (speckit workflow)
 ├── supabase/
 │   ├── migrations/             # Numbered SQL migrations (001_xxx.sql)
 │   └── seed-v2.sql            # Test data (DO NOT run in production)
@@ -286,7 +287,11 @@ eventos-bff/
 │       │   ├── AdminLayout.tsx
 │       │   ├── OrganizerLayout.tsx
 │       │   ├── AdminRoute.tsx
-│       │   └── OrganizerRoute.tsx
+│       │   ├── OrganizerRoute.tsx
+│       │   ├── ProtectedRoute.tsx
+│       │   ├── FormInput.tsx
+│       │   ├── FormSelect.tsx
+│       │   └── FormTextarea.tsx
 │       ├── pages/            # Route-specific page components
 │       │   ├── admin/        # SuperAdmin pages
 │       │   └── organizer/    # Organizer pages
@@ -295,8 +300,10 @@ eventos-bff/
 │       ├── types/            # TypeScript interfaces (mirrors DB schema)
 │       └── utils/            # Helper functions
 ├── database-schema.dbml       # Visual schema documentation
-├── DATABASE_STATUS.md         # Current DB state + migrations log
-├── LOGINS.md                 # Test credentials
+├── docs/
+│   ├── DATABASE_STATUS.md     # Current DB state + migrations log
+│   ├── LOGINS.md              # Test credentials
+│   └── TROUBLESHOOTING_ORGANIZER.md  # Common issues & solutions
 └── README.md                 # Project overview
 ```
 
@@ -341,7 +348,7 @@ eventos-bff/
    - Update header comment with migration number and brief description
 3. **Apply migration**: Use Supabase MCP (`mcp_com_supabase__execute_sql`)
 4. **Update types**: Sync `frontend/src/types/index.ts` with new schema
-5. **Document**: Add entry to `DATABASE_STATUS.md`
+5. **Document**: Add entry to `docs/DATABASE_STATUS.md`
 6. **Test RLS**: Verify policies work correctly with new schema
 7. **Test Queries**: Ensure existing queries work (especially if added deleted_at filter)
 8. **Commit**: Single atomic commit with migration + DBML + types
@@ -433,7 +440,7 @@ USING (
 5. **Backend**: Test RLS policies work correctly
 6. **Frontend**: Build UI components, integrate with Supabase client
 7. **Test**: Manual testing with different roles
-8. **Document**: Update README, DATABASE_STATUS if significant
+8. **Document**: Update README, `docs/DATABASE_STATUS.md` if significant
 
 ### Modifying Existing Feature
 1. **Assess Impact**: Identify affected tables, components, routes

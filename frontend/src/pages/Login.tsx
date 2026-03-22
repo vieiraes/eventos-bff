@@ -13,9 +13,9 @@ export function Login() {
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user) {
-      if (user.role === 'superadmin') {
+      if (user.role === 'superadmin' || user.role === 'ADMIN') {
         navigate('/admin')
-      } else if (user.role === 'organizer') {
+      } else if (user.role === 'organizer' || user.role === 'MANAGER') {
         navigate('/organizer')
       } else {
         navigate('/')
@@ -32,9 +32,9 @@ export function Login() {
       const user = await signIn(email, password)
       
       // Redirect based on user role
-      if (user?.role === 'superadmin') {
+      if (user?.role === 'superadmin' || user?.role === 'ADMIN') {
         navigate('/admin')
-      } else if (user?.role === 'organizer') {
+      } else if (user?.role === 'organizer' || user?.role === 'MANAGER') {
         navigate('/organizer')
       } else {
         navigate('/')

@@ -1,6 +1,40 @@
 # 🔑 Logins e Credenciais - Eventos BFF
 
-## ⚡ Login Funcional (Pronto para Usar)
+## ⚠️ SETUP INICIAL OBRIGATÓRIO
+
+### 1️⃣ Criar SUPERADMIN no Supabase
+
+> **IMPORTANTE:** O arquivo `seed-v2.sql` cria dados de exemplo, mas **NÃO cria logins funcionais**.  
+> Você **DEVE** executar o `seed-with-auth.sql` para criar usuários com senha.
+
+**Opção 1: Usar seed-with-auth.sql (RECOMENDADO)**
+```bash
+# No Supabase Dashboard → SQL Editor
+# Execute o arquivo: supabase/seed-with-auth.sql
+# Isso cria:
+# - SUPERADMIN com senha
+# - 3 Organizers com senha
+# - Trigger criará automaticamente em public.users
+```
+
+**Opção 2: Criar manualmente via Supabase Dashboard**
+```
+1. Acesse: Supabase Dashboard → Authentication → Users
+2. Clique "Add User" → "Create new user"
+3. Email: superadmin@eventos-bff.com
+4. Password: superadmin123
+5. Marque "Auto Confirm User"
+6. Em "User Metadata", adicione:
+   {
+     "full_name": "Bruno Vieira",
+     "role": "superadmin"
+   }
+7. Salvar
+```
+
+---
+
+## ⚡ Login Funcional (Após Setup)
 
 ### SUPERADMIN
 ```
@@ -20,6 +54,21 @@ Role: superadmin
 - ✅ Ao fazer login, **superadmin** → `/admin`
 - ✅ Ao fazer login, **organizer** → `/organizer`
 - ✅ Outros usuários → `/` (listagem de eventos)
+
+### ORGANIZERS (Se executou seed-with-auth.sql)
+```
+Email: carlos.silva@multieventos.com.br
+Senha: carlos123
+Role: organizer (MultiEventos)
+
+Email: maria.santos@multieventos.com.br
+Senha: maria123
+Role: organizer (MultiEventos)
+
+Email: lucas.admin@eventospro.com.br
+Senha: lucas123
+Role: organizer (EventosPro)
+```
 
 ---
 
