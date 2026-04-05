@@ -6,17 +6,12 @@ Sistema SaaS Multi-tenant para Gestão de Eventos Corporativos
 
 ## 🚀 Acesso Rápido
 
-**Servidor:** http://localhost:3000
-
-**Login SuperAdmin:**
-- 📧 Email: `superadmin@eventos-bff.com`
-- 🔑 Senha: `superadmin123`
-- 🎛️ Dashboard: http://localhost:3000/admin
+**Servidor:** http://localhost:3000 · **Dashboard Admin:** http://localhost:3000/admin
 
 **Documentação:**
-- 🔑 [Logins e Credenciais](docs/LOGINS.md) - Todos os usuários e como criar novos
-- 💻 [Frontend](frontend/README.md) - Documentação React + TypeScript
-- 🗄️ [Database](supabase/README.md) - Migrations e Supabase
+- 🔑 [Logins e Credenciais](docs/LOGINS.md) — Usuários, senhas e como criar novos
+- 💻 [Frontend](frontend/README.md) — Stack, estrutura, convenções e rotas React
+- 🗄️ [Edge Function: reset-user-password](supabase/functions/reset-user-password/README.md)
 
 ---
 
@@ -127,208 +122,22 @@ Sistema baseado em **instâncias isoladas** (empresas clientes):
 ### 1. Supabase
 
 ```bash
-# Projeto criado: jhzqdelkyghibyylrupx.supabase.co
-
-# Migration aplicada
-Migration: 001_initial_schema
-Status: ✅ Applied
-Tables: 8 created
+# Projeto: jhzqdelkyghibyylrupx.supabase.co
+# Migrations aplicadas via Supabase MCP — ver supabase/migrations/
 ```
 
-### 2. Database Seed
+### 2. Credenciais e Usuários
 
-```bash
-# Dados de exemplo já inseridos (supabase/seed-v2.sql):
-- 1 SUPERADMIN (Bruno Vieira)
-- 3 Instances (Empresas): MultiEventos, EventosPro, Campus Events
-- 4 Organizers (Admins das empresas)
-- 2 Staff (MultiEventos)
-- 7 Participantes (speakers, vips, attendees)
-- 4 Events (2 da MultiEventos, 1 da EventosPro, 1 draft)
-- 9 Event Areas
-- 7 Access Packages
-- 6 Registrations (vários status)
-- R$ 2.950,00 em receita confirmada (eventos das empresas)
-```
+Ver **[docs/LOGINS.md](docs/LOGINS.md)** para credenciais, usuários do seed e como criar novos.
 
-### 3. Credenciais
-
-Copie `.env.example` para `.env`:
-
-```bash
-cp .env.example .env
-```
-
-Variáveis:
-- `SUPABASE_URL`: https://jhzqdelkyghibyylrupx.supabase.co
-- `SUPABASE_ANON_KEY`: eyJhbGci... (já preenchido)
-- `SUPABASE_SERVICE_ROLE_KEY`: (obter no dashboard)
-
-### 4. Auth Integration
-
-Auth integrado com triggers automáticos:
-
-```sql
--- Quando usuário se registra no Supabase Auth:
-auth.users → trigger → public.users (auto-criado)
-
--- Funções:
-- handle_new_user(): Cria registro em public.users
-- handle_user_update(): Sincroniza email_verified e last_login_at
-```
-
-**Helper Functions:**
-- `get_user_profile()`: Dados do usuário + nome da instância
-- `get_user_events()`: Eventos com status de inscrição do usuário
-- `get_user_access_for_event(event_id)`: Pacotes de acesso ativos
-
-### 5. Frontend (React + TypeScript)
+### 3. Frontend
 
 ```bash
 cd frontend
+cp .env.example .env   # preencha VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY
 npm install
-npm run dev  # Roda na porta 3000
+npm run dev            # http://localhost:3000
 ```
-
-**Funcionalidades:**
-- ✅ Login/Registro com Supabase Auth
-- ✅ Context API para autenticação
-- ✅ Rotas protegidas por role
-- ✅ Design com Tailwind CSS
-- ✅ **Dashboard SuperAdmin** - Gerencia instâncias e organizers
-- ✅ **Dashboard Organizer** - Gerencia eventos da própria empresa
-- ✅ Listagem de eventos com filtros
-- ✅ Gerenciamento de usuários por role
-
-**Rotas:**
-- `/login` - Autenticação (redireciona por role)
-- `/register` - Criar conta
-- `/` - Eventos públicos (protegida)
-- **SuperAdmin:**
-  - `/admin` - Dashboard com stats de instâncias e organizers
-  - `/admin/instances` - Gerenciar empresas clientes
-  - `/admin/users` - Gerenciar organizers das instâncias
-- **Organizer:**
-  - `/organizer` - Dashboard com stats dos eventos da empresa
-  - `/organizer/events` - Gerenciar eventos da sua instância
-
-Veja mais em [frontend/README.md](frontend/README.md)
-
-## � Logins e Acesso
-
-### Login Funcional (Pronto para Usar)
-
-Atualmente, apenas o **SUPERADMIN** possui credenciais de acesso no Supabase Auth:
-
-**SUPERADMIN** (Acesso Total ao Sistema)
-```
-Email: superadmin@eventos-bff.com
-Senha: superadmin123
-Role: superadmin
-Permissões: Gerenciar todas as instâncias, usuários e eventos
-```
-
-**Como acessar:**
-1. Acesse: http://localhost:3000/login
-2. Use as credenciais acima
-3. Dashboard Admin disponível em: http://localhost:3000/admin
-
-### Usuários no Banco de Dados (Seed)
-
-Os seguintes usuários existem na tabela `public.users` (criados pelo seed.sql), mas **NÃO possuem login** no Supabase Auth ainda:
-
-#### SBCP - Sociedade Brasileira de Cirurgia Plástica
-
-**Organizers:**
-- `carlos.silva@sbcp.org.br` - Dr. Carlos Silva (Presidente)
-- `maria.santos@sbcp.org.br` - Maria Santos (Coordenadora)
-
-**Staff:**
-- `joao.recep@eventos.com` - João Recepção (Recepcionista)
-- `ana.coord@eventos.com` - Ana Coordenadora
-
-**Speakers/VIP:**
-- `dra.patricia@hospital.com.br` - Dra. Patricia Rodrigues (Cirurgiã Plástica)
-- `dr.fernando@clinica.com.br` - Dr. Fernando Costa (Cirurgião)
-
-**Attendees:**
-- `julia.almeida@email.com` - Julia Almeida (Médica Residente)
-- `pedro.oliveira@email.com` - Pedro Oliveira (Estudante Medicina)
-- `camila.souza@email.com` - Camila Souza (Estudante)
-- `rafael.costa@email.com` - Rafael Costa (Cirurgião)
-
-#### TechConf Brasil
-
-**Organizers:**
-- `admin@techconf.com.br` - Lucas Admin (CEO)
-
-**Attendees:**
-- `mariana.dev@email.com` - Mariana Developer (Tech Lead)
-
-### Como Criar Novos Usuários
-
-Para testar o sistema com outros usuários:
-
-1. **Opção 1 - Registro via Interface:**
-   - Acesse: http://localhost:3000/register
-   - Preencha: Nome completo, Email, Senha
-   - O sistema criará automaticamente o usuário com role `attendee`
-
-2. **Opção 2 - Usar os emails do seed:**
-   - Registre-se com um dos emails listados acima
-   - O sistema sincronizará os dados com a tabela `public.users`
-
-3. **Opção 3 - Criar via Supabase Dashboard:**
-   - Acesse: https://supabase.com/dashboard/project/jhzqdelkyghibyylrupx/auth/users
-   - Clique em "Add user" → "Create new user"
-   - Preencha email e senha
-   - O trigger `handle_new_user()` criará automaticamente o registro em `public.users`
-
-### Instâncias
-
-1. **SBCP** (Enterprise)
-   - Eventos: Congresso CBCP 2026, Workshop Técnicas Avançadas
-   - 10 usuários
-   
-2. **TechConf Brasil** (Premium)
-   - Eventos: TechConf 2026 - IA e Futuro
-   - 2 usuários
-   
-3. **UFES** (Standard)
-   - Sem eventos ainda
-
-### Evento: CBCP 2026
-
-```
-Status: published
-Datas: 15-18 Jun 2026
-Local: Centro de Convenções de Vitória
-Capacidade: 2000
-Inscrições: 5 (3 confirmadas, 1 aguardando pgto, 1 pré-cadastro)
-Receita: R$ 2.950,00
-```
-
-**Áreas:**
-- Hall Principal
-- Sala Plenária
-- Sala 1 - Workshops
-- Sala 14 - VIP
-- Área de Stands
-- Backstage
-
-**Pacotes:**
-- Básico (R$ 450): Hall + Plenária + Stands
-- Acesso Sala 1 (R$ 200): Addon workshops
-- Premium (R$ 800): Todas exceto Sala 14 VIP
-- VIP Full Access (R$ 1.500): Acesso total
-
-### Exemplo de Inscrição Completa
-
-**Julia Almeida** (CBCP2026-0001):
-- Status: confirmed ✅
-- Pacotes: Básico + Sala 1
-- Total: R$ 650,00
-- Acessos ativos: 2 (liberados para as áreas)
 
 ## 🔐 Row Level Security (RLS)
 
@@ -361,129 +170,56 @@ Receita: R$ 2.950,00
 
 ```
 eventos-bff/
-├── .env.example          # Template de variáveis de ambiente
-├── .gitignore            # Git ignore configurado
-├── database-schema.dbml  # Schema visual (dbdiagram.io)
-├── README.md             # Este arquivo
+├── database-schema.dbml          # Schema visual (dbdiagram.io)
+├── docs/
+│   └── LOGINS.md                 # Credenciais e guia de acesso
 ├── supabase/
-│   ├── migrations/
-│   │   ├── 001_initial_schema.sql      # Schema inicial (8 tabelas)
-│   │   └── 002_auth_integration.sql    # Auth + RLS + Helper functions
-│   ├── seed.sql          # Dados de exemplo
-│   └── README.md         # Instruções Supabase
-└── frontend/
-    ├── src/
-    │   ├── components/   # Componentes reutilizáveis
-    │   ├── hooks/        # Custom hooks (useAuth)
-    │   ├── pages/        # Páginas (Login, Register, Events)
-    │   ├── services/     # Supabase client
-    │   ├── types/        # TypeScript definitions
-    │   ├── App.tsx       # Rotas
-    │   └── main.tsx      # Entry point
-    ├── package.json
-    ├── vite.config.ts
-    ├── tailwind.config.js
-    └── README.md         # Docs do frontend
+│   ├── migrations/               # Migrations numeradas sequencialmente
+│   └── functions/
+│       └── reset-user-password/  # Edge Function para reset de senha
+└── frontend/                     # App React + TypeScript (ver frontend/README.md)
 ```
 
-## 🎯 Próximos Passos
+## 🎯 Status do Projeto
 
-### Sprint Atual (Demanda #2)
-- [x] ✅ Criar schema do banco de dados
-- [x] ✅ Aplicar migration no Supabase
-- [x] ✅ Popular com dados de exemplo
-- [x] ✅ Configurar Supabase Auth
-- [x] ✅ Integrar Auth com tabela users (triggers automáticos)
-- [x] ✅ Implementar RLS completo (35+ políticas)
-- [x] ✅ Criar helper functions para API
-- [x] ✅ Implementar frontend React + TypeScript
-- [x] ✅ Autenticação (Login/Registro)
-- [x] ✅ Listagem de eventos
-- [ ] 🔄 Fluxo de inscrição em eventos
-- [ ] 🔄 Carrinho de compras (registration_items)
+**Implementado:**
+- ✅ Schema do banco + Auth + RLS (35+ políticas)
+- ✅ Dashboard SuperAdmin (instâncias, organizers, usuários)
+- ✅ Dashboard Organizer (eventos, usuários da instância)
+- ✅ CRUD de instâncias, eventos e usuários
+- ✅ Fluxo de registro: `pre_registered → awaiting_payment → paid → confirmed`
 
-### Próximas Demandas
-- [ ] Detalhes do evento e seleção de pacotes
-- [ ] Sistema de pagamentos (integração)
-- [ ] User profile e edição
-- [ ] Dashboard do organizador
-  - [ ] Criar/editar eventos
-  - [ ] Gerenciar áreas e pacotes
-  - [ ] Visualizar inscrições
-  - [ ] Relatórios financeiros
-- [ ] QR Codes para check-in
-- [ ] Dashboard de analytics
-- [ ] Notificações por email
-- [ ] Upload de imagens (eventos, avatares)
+**Em desenvolvimento:**
+- 🔄 Fluxo de pagamento integrado
+- 🔄 Check-in por QR Code
+- 🔄 Dashboard analytics e relatórios financeiros
 
 ## 🛠️ Scripts Úteis
 
 ### Resetar Database
 ```sql
--- Via Supabase SQL Editor ou MCP
-TRUNCATE user_access, registration_items, registrations, 
-         access_packages, event_areas, events, users, instances 
+TRUNCATE user_access, registration_items, registrations,
+         access_packages, event_areas, events, users, instances
 RESTART IDENTITY CASCADE;
-```
-
-### Re-seed
-```bash
-# Executar o conteúdo de supabase/seed.sql
-# Via Supabase Dashboard > SQL Editor
-# Ou via Supabase MCP
 ```
 
 ### Verificar Tabelas
 ```sql
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
-ORDER BY table_name;
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'public' ORDER BY table_name;
 ```
-
-### Consultar Eventos com Estatísticas
-```sql
-SELECT 
-  e.name as evento,
-  e.status,
-  COUNT(DISTINCT r.id) as total_inscricoes,
-  COUNT(DISTINCT CASE WHEN r.status = 'confirmed' THEN r.id END) as confirmadas,
-  SUM(CASE WHEN r.status = 'confirmed' THEN r.total_amount ELSE 0 END) as receita
-FROM events e
-LEFT JOIN registrations r ON e.id = r.event_id
-GROUP BY e.id, e.name, e.status;
-```
-
-## 📝 Notas Importantes
-
-- **registration_id** em `user_access` pode ser NULL para acessos cortesia (speakers, vips sem registro formal)
-- **instance_id** em `users` é NULL apenas para SUPERADMIN
-- **allowed_areas** em `access_packages` é JSONB com array de UUIDs das areas
-- **Shopping cart**: `registration_items` permite comprar múltiplos pacotes em uma inscrição
-- **Funil completo**: Rastreamos desde pre_registered até confirmed com timestamps
 
 ## 📚 Documentação
 
-### Documentação Interna
-- **[LOGINS.md](docs/LOGINS.md)** - Credenciais e guia de acesso (SuperAdmin, usuários seed, como criar novos)
-- **[frontend/README.md](frontend/README.md)** - Documentação completa do frontend React
-- **[supabase/README.md](supabase/README.md)** - Instruções do Supabase e migrations
-- **database-schema.dbml** - Schema visual (importar em https://dbdiagram.io)
-
-### Recursos Externos
-- Schema visual interativo: https://dbdiagram.io (importar `database-schema.dbml`)
-- Supabase Docs: https://supabase.com/docs
-- PostgreSQL Docs: https://www.postgresql.org/docs/
+- **[docs/LOGINS.md](docs/LOGINS.md)** — Credenciais, usuários seed e troubleshooting de auth
+- **[frontend/README.md](frontend/README.md)** — Stack, estrutura, convenções e rotas do frontend
+- **[supabase/functions/reset-user-password/README.md](supabase/functions/reset-user-password/README.md)** — Edge Function de reset de senha
+- **database-schema.dbml** — Schema visual (importar em https://dbdiagram.io)
 
 ## 👥 Time
 
 - **Product Owner**: Bruno Vieira
-- **Dev Architect**: GitHub Copilot (Claude Sonnet 4.5)
 
 ---
 
-**Status**: 🟢 Database + Auth + Frontend implementados e funcionando!
-
-**Servidor de Desenvolvimento**: http://localhost:3000
-
-**Última atualização**: 16 de Fevereiro de 2026
+**Status**: 🟢 Em produção · **Dev**: http://localhost:3000

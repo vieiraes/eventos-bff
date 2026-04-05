@@ -1,4 +1,4 @@
-# Copilot Instructions — Eventos BFF
+# AI Instructions — Eventos BFF
 
 SaaS B2B multi-tenant platform for corporate event management. No traditional backend — the entire backend is Supabase (PostgreSQL + Auth + RLS + Edge Functions).
 
