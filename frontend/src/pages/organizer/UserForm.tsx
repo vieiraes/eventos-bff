@@ -1,14 +1,13 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { createClient } from '@supabase/supabase-js'
-import { supabase } from '../../services/supabase'
+import { supabase, createEphemeralClient } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { OrganizerLayout } from '../../components/OrganizerLayout'
 import { FormInput } from '../../components/FormInput'
 import { FormSelect } from '../../components/FormSelect'
 
 interface UserFormData {
-  role: 'organizer' | ' staff' | 'speaker' | 'vip' | 'attendee'
+  role: 'organizer' | 'staff' | 'speaker' | 'vip' | 'attendee'
   email: string
   full_name: string
   phone: string
@@ -52,6 +51,10 @@ export function OrganizerUserForm() {
   const [loadingData, setLoadingData] = useState(false)
   const [loadingEvents, setLoadingEvents] = useState(false)
   const [error, setError] = useState('')
+  const [resetPassword, setResetPassword] = useState({ newPassword: '', confirmPassword: '' })
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetError, setResetError] = useState('')
+  const [resetSuccess, setResetSuccess] = useState(false)
 
   useEffect(() => {
     if (user?.instance_id) {
@@ -118,6 +121,42 @@ export function OrganizerUserForm() {
       setError(err.message || 'Erro ao carregar usuário')
     } finally {
       setLoadingData(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    setResetError('')
+    setResetSuccess(false)
+
+    if (resetPassword.newPassword !== resetPassword.confirmPassword) {
+      setResetError('As senhas não coincidem')
+      return
+    }
+    if (resetPassword.newPassword.length < 6) {
+      setResetError('A senha deve ter no mínimo 6 caracteres')
+      return
+    }
+
+    setResetLoading(true)
+    try {
+      const isOwnProfile = id === user?.id
+      if (isOwnProfile) {
+        // Alterar própria senha diretamente (sem Edge Function)
+        const { error } = await supabase.auth.updateUser({ password: resetPassword.newPassword })
+        if (error) throw error
+      } else {
+        // Resetar senha de outro usuário via Edge Function (requer service_role)
+        const { error } = await supabase.functions.invoke('reset-user-password', {
+          body: { userId: id, newPassword: resetPassword.newPassword },
+        })
+        if (error) throw new Error((error as any).message || 'Erro ao redefinir senha')
+      }
+      setResetSuccess(true)
+      setResetPassword({ newPassword: '', confirmPassword: '' })
+    } catch (err: any) {
+      setResetError(err.message || 'Erro ao redefinir senha')
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -203,17 +242,8 @@ export function OrganizerUserForm() {
       }
 
       // MODO CRIAÇÃO: Criar novo usuário
-      // 1. Criar cliente Supabase ANÔNIMO para criar usuário sem afetar sessão atual
-      const anonClient = createClient(
-        'https://jhzqdelkyghibyylrupx.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoenFkZWxreWdoaWJ5eWxydXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNTQxNzAsImV4cCI6MjA4NjgzMDE3MH0.0y59gzHWws4Qs4AJcamRfM85_YeF0U6c5TEjPDh1-Ec',
-        {
-          auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-          }
-        }
-      )
+      // 1. Criar cliente efêmero para criar usuário sem afetar sessão atual
+      const anonClient = createEphemeralClient()
 
       // 2. Criar usuário
       const { data: authData, error: authError } = await anonClient.auth.signUp({
@@ -447,6 +477,52 @@ export function OrganizerUserForm() {
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
               />
+            </div>
+          )}
+
+          {/* Redefinir senha (apenas em modo edição) */}
+          {isEditing && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                Redefinir Senha
+              </h3>
+
+              {resetSuccess && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-sm text-green-800 font-medium">✅ Senha redefinida com sucesso!</p>
+                </div>
+              )}
+
+              {resetError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-800">{resetError}</p>
+                </div>
+              )}
+
+              <FormInput
+                label="Nova senha"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                value={resetPassword.newPassword}
+                onChange={(e) => setResetPassword(prev => ({ ...prev, newPassword: e.target.value }))}
+              />
+
+              <FormInput
+                label="Confirmar nova senha"
+                type="password"
+                placeholder="Digite a senha novamente"
+                value={resetPassword.confirmPassword}
+                onChange={(e) => setResetPassword(prev => ({ ...prev, confirmPassword: e.target.value }))}
+              />
+
+              <button
+                type="button"
+                onClick={handleResetPassword}
+                disabled={resetLoading || !resetPassword.newPassword}
+                className="px-4 py-3 text-base font-medium text-white bg-gray-700 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {resetLoading ? 'Redefinindo...' : 'Redefinir senha'}
+              </button>
             </div>
           )}
 

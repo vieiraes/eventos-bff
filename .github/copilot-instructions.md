@@ -200,15 +200,16 @@ Supabase project: `jhzqdelkyghibyylrupx.supabase.co`
 
 > Para qualquer mudança em banco, auth ou RLS, consulte `.github/agents/supabase-guardian.agent.md`.
 
-**Criar usuário via `signUp()` desloga o usuário atual.** Padrão obrigatório — salvar e restaurar sessão:
+**Criar usuário via `signUp()` desloga o usuário atual.** Padrão obrigatório — usar `createEphemeralClient()`:
 
 ```typescript
-const { data: { session: current } } = await supabase.auth.getSession()
-await supabase.auth.signUp({ email, password, options: { data: { role, instance_id } } })
-await supabase.auth.setSession({ access_token: current.access_token, refresh_token: current.refresh_token })
+import { supabase, createEphemeralClient } from '../services/supabase'
+
+const anonClient = createEphemeralClient() // persistSession: false — não afeta sessão atual
+await anonClient.auth.signUp({ email, password, options: { data: { role, instance_id } } })
 ```
 
-Este padrão já existe em `OrganizerForm.tsx` e `UserForm.tsx` — nunca remover.
+Este padrão está em `OrganizerForm.tsx` e `organizer/UserForm.tsx` — nunca remover.
 
 ## Registration Flow
 

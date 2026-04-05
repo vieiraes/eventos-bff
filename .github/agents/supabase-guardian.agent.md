@@ -109,23 +109,24 @@ await supabase.auth.signUp({
 ### ⚠️ Criar Usuário via signUp() Desloga o Usuário Atual
 
 O `signUp()` automaticamente loga o novo usuário, **derrubando a sessão do SuperAdmin**.
-**Solução já implementada** em `OrganizerForm.tsx` e `UserForm.tsx`:
+**Solução implementada**: cliente efêmero com `persistSession: false` via `createEphemeralClient()`.
 
 ```typescript
-// 1. Salvar sessão atual
-const { data: { session: currentSession } } = await supabase.auth.getSession()
+// ✅ CORRETO — importar e usar createEphemeralClient
+import { supabase, createEphemeralClient } from '../services/supabase'
 
-// 2. Criar novo usuário
-await supabase.auth.signUp({ email, password, options: { data: {...} } })
-
-// 3. Restaurar sessão anterior
-await supabase.auth.setSession({
-  access_token: currentSession.access_token,
-  refresh_token: currentSession.refresh_token,
+const anonClient = createEphemeralClient()
+const { data: authData, error } = await anonClient.auth.signUp({
+  email, password,
+  options: { data: { full_name, role, instance_id } }
 })
+// A sessão do admin permanece intacta — o novo cliente não persiste sessão
+
+// ❌ NUNCA — criar cliente com credenciais hardcoded
+const anonClient = createClient('https://...supabase.co', 'eyJ...hardcoded...', { ... })
 ```
 
-**Nunca remova este padrão** — sem ele o SuperAdmin é deslogado ao criar qualquer usuário.
+Este padrão já existe em `OrganizerForm.tsx` e `organizer/UserForm.tsx` — **nunca remover `createEphemeralClient`**.
 
 ### Email Confirmation DEVE estar OFF
 
@@ -200,7 +201,7 @@ const newClient = createClient(url, key) // proibido
 | Sintoma | Causa Provável | Como Verificar/Corrigir |
 |---------|---------------|------------------------|
 | Login retorna "Invalid login credentials" | Email Confirmation ativo | Dashboard → Auth → Email → desligar "Confirm email" |
-| SuperAdmin deslogado após criar usuário | Falta o restore de sessão | Verificar `OrganizerForm.tsx` / `UserForm.tsx` |
+| SuperAdmin deslogado após criar usuário | `createEphemeralClient()` não foi usado | Verificar se `OrganizerForm.tsx` / `UserForm.tsx` usam `createEphemeralClient` de `services/supabase` |
 | Query retorna dados de outra instância | RLS policy faltando ou com bug | Testar com usuário organizer da instância B tentando ver dados da A |
 | "infinite recursion detected in policy" | Policy faz query direta em `users` | Substituir por `public.get_user_role()` / `public.is_superadmin()` |
 | Usuário criado não aparece em `public.users` | Trigger `handle_new_user` falhou | Verificar logs do Supabase + `raw_user_meta_data` no auth.users |

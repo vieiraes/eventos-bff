@@ -17,6 +17,7 @@ import { OrganizerEvents } from './pages/organizer/Events'
 import { EventForm } from './pages/organizer/EventForm'
 import { OrganizerUsers } from './pages/organizer/Users'
 import { OrganizerUserForm } from './pages/organizer/UserForm'
+import { ChangePassword } from './pages/ChangePassword'
 
 function App() {
   return (
@@ -162,6 +163,16 @@ function App() {
             }
           />
           
+          {/* Change Password — accessible to all authenticated users */}
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
