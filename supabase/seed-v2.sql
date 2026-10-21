@@ -243,9 +243,13 @@ INSERT INTO registration_items (id, registration_id, access_package_id, quantity
 INSERT INTO registration_items (id, registration_id, access_package_id, quantity, unit_price, total_price, status, added_at, paid_at) VALUES
 ('70000000-0000-0000-0000-000000000006', '60000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000003', 1, 800.00, 800.00, 'in_cart', '2026-02-10 16:35:00-03', NULL);
 
+-- TechConf: pacote único (a inscrição e o acesso da Mariana apontam para ele; access_package_id é obrigatório)
+INSERT INTO access_packages (id, event_id, name, description, package_type, allowed_areas, price, available_quantity, status) VALUES
+('50000000-0000-0000-0000-000000000020', '30000000-0000-0000-0000-000000000004', 'Ingresso TechConf', 'Acesso a todas as palestras do TechConf', 'base', '[]'::jsonb, 350.00, 500, 'active');
+
 -- Mariana: TechConf
 INSERT INTO registration_items (id, registration_id, access_package_id, quantity, unit_price, total_price, status, added_at, paid_at) VALUES
-('70000000-0000-0000-0000-000000000010', '60000000-0000-0000-0000-000000000010', NULL, 1, 350.00, 350.00, 'confirmed', '2026-02-05 10:03:00-03', '2026-02-05 11:00:00-03');
+('70000000-0000-0000-0000-000000000010', '60000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000020', 1, 350.00, 350.00, 'confirmed', '2026-02-05 10:03:00-03', '2026-02-05 11:00:00-03');
 
 -- ============================================
 -- 11. USER ACCESS (Acessos efetivos)
@@ -271,7 +275,7 @@ INSERT INTO user_access (id, registration_id, registration_item_id, user_id, eve
 
 -- Mariana: TechConf
 INSERT INTO user_access (id, registration_id, registration_item_id, user_id, event_id, access_package_id, acquired_type, acquired_at, valid_from, valid_until, status) VALUES
-('80000000-0000-0000-0000-000000000010', '60000000-0000-0000-0000-000000000010', '70000000-0000-0000-0000-000000000010', '20000000-0000-0000-0000-000000000030', '30000000-0000-0000-0000-000000000004', NULL, 'purchased', '2026-02-05 11:05:00-03', '2026-09-05 00:00:00-03', '2026-09-07 23:59:59-03', 'active');
+('80000000-0000-0000-0000-000000000010', '60000000-0000-0000-0000-000000000010', '70000000-0000-0000-0000-000000000010', '20000000-0000-0000-0000-000000000030', '30000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000020', 'purchased', '2026-02-05 11:05:00-03', '2026-09-05 00:00:00-03', '2026-09-07 23:59:59-03', 'active');
 
 -- ============================================
 -- RESUMO DOS DADOS:
