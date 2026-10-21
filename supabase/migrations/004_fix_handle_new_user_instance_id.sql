@@ -61,6 +61,5 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-COMMENT ON FUNCTION public.handle_new_user() IS 
-  'Cria user em public.users quando auth.users é criado. ' ||
-  'Suporta role e instance_id via metadata com validação robusta de UUID.';
+COMMENT ON FUNCTION public.handle_new_user() IS
+  'Cria user em public.users quando auth.users é criado. Suporta role e instance_id via metadata com validação robusta de UUID.';

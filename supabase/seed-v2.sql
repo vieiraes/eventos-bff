@@ -7,8 +7,8 @@
 -- ============================================
 -- 1. SUPERADMIN (sem instance_id)
 -- ============================================
-INSERT INTO users (id, email, full_name, phone, role, instance_id, status, email_verified) VALUES
-('00000000-0000-0000-0000-000000000001', 'superadmin@eventos-bff.com', 'Bruno Vieira', '+55 27 99999-0001', 'superadmin', NULL, 'active', true);
+INSERT INTO users (id, email, full_name, phone, role, instance_id, status) VALUES
+('00000000-0000-0000-0000-000000000001', 'superadmin@eventos-bff.com', 'Bruno Vieira', '+55 27 99999-0001', 'superadmin', NULL, 'active');
 
 -- ============================================
 -- 2. INSTANCES (Empresas de Gerenciamento de Eventos)
@@ -23,26 +23,26 @@ INSERT INTO instances (id, name, slug, type, status, settings) VALUES
 -- ============================================
 
 -- MultiEventos Professional - Organizers
-INSERT INTO users (id, instance_id, email, full_name, phone, company, position, role, status, email_verified) VALUES
-('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'carlos.silva@multieventos.com.br', 'Carlos Silva', '+55 27 99999-1001', 'MultiEventos', 'CEO', 'organizer', 'active', true),
-('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'maria.santos@multieventos.com.br', 'Maria Santos', '+55 27 99999-1002', 'MultiEventos', 'Diretora de Operações', 'organizer', 'active', true);
+INSERT INTO users (id, instance_id, email, full_name, phone, company, position, role, status) VALUES
+('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'carlos.silva@multieventos.com.br', 'Carlos Silva', '+55 27 99999-1001', 'MultiEventos', 'CEO', 'organizer', 'active'),
+('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'maria.santos@multieventos.com.br', 'Maria Santos', '+55 27 99999-1002', 'MultiEventos', 'Diretora de Operações', 'organizer', 'active');
 
 -- EventosPro Brasil - Organizer
-INSERT INTO users (id, instance_id, email, full_name, phone, company, position, role, status, email_verified) VALUES
-('20000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002', 'lucas.admin@eventospro.com.br', 'Lucas Admin', '+55 11 98888-0001', 'EventosPro', 'Diretor Geral', 'organizer', 'active', true);
+INSERT INTO users (id, instance_id, email, full_name, phone, company, position, role, status) VALUES
+('20000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002', 'lucas.admin@eventospro.com.br', 'Lucas Admin', '+55 11 98888-0001', 'EventosPro', 'Diretor Geral', 'organizer', 'active');
 
 -- Campus Events Manager - Organizer
-INSERT INTO users (id, instance_id, email, full_name, phone, company, position, role, status, email_verified) VALUES
-('20000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000003', 'coordenacao@campusevents.edu.br', 'Ana Coordenadora', '+55 27 99999-3001', 'UFES', 'Coordenadora de Eventos', 'organizer', 'active', true);
+INSERT INTO users (id, instance_id, email, full_name, phone, company, position, role, status) VALUES
+('20000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000003', 'coordenacao@campusevents.edu.br', 'Ana Coordenadora', '+55 27 99999-3001', 'UFES', 'Coordenadora de Eventos', 'organizer', 'active');
 
 -- ============================================
 -- 4. STAFF (Equipe das Instâncias)
 -- ============================================
 
 -- MultiEventos Professional - Staff
-INSERT INTO users (id, instance_id, email, full_name, phone, company, position, role, status, email_verified) VALUES
-('20000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000001', 'joao.recep@multieventos.com.br', 'João Recepcionista', '+55 27 99999-1010', 'MultiEventos', 'Recepcionista', 'staff', 'active', true),
-('20000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000001', 'ana.coord@multieventos.com.br', 'Ana Coordenadora', '+55 27 99999-1011', 'MultiEventos', 'Coordenadora de Campo', 'staff', 'active', true);
+INSERT INTO users (id, instance_id, email, full_name, phone, company, position, role, status) VALUES
+('20000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000001', 'joao.recep@multieventos.com.br', 'João Recepcionista', '+55 27 99999-1010', 'MultiEventos', 'Recepcionista', 'staff', 'active'),
+('20000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000001', 'ana.coord@multieventos.com.br', 'Ana Coordenadora', '+55 27 99999-1011', 'MultiEventos', 'Coordenadora de Campo', 'staff', 'active');
 
 -- ============================================
 -- 5. EVENTS (Eventos gerenciados pelas instâncias)
@@ -133,20 +133,20 @@ INSERT INTO events (id, instance_id, created_by, name, slug, description, event_
 -- ============================================
 
 -- Participantes do Congresso SBCP
-INSERT INTO users (id, instance_id, email, full_name, phone, document_number, company, position, role, status, email_verified) VALUES
+INSERT INTO users (id, instance_id, email, full_name, phone, document_number, company, position, role, status) VALUES
 -- Speakers SBCP
-('20000000-0000-0000-0000-000000000020', '10000000-0000-0000-0000-000000000001', 'dra.patricia@hospital.com.br', 'Dra. Patricia Rodrigues', '+55 21 99999-2001', '567.890.123-45', 'Hospital São Lucas', 'Cirurgiã Plástica', 'speaker', 'active', true),
+('20000000-0000-0000-0000-000000000020', '10000000-0000-0000-0000-000000000001', 'dra.patricia@hospital.com.br', 'Dra. Patricia Rodrigues', '+55 21 99999-2001', '567.890.123-45', 'Hospital São Lucas', 'Cirurgiã Plástica', 'speaker', 'active'),
 -- VIP SBCP
-('20000000-0000-0000-0000-000000000021', '10000000-0000-0000-0000-000000000001', 'dr.fernando@clinica.com.br', 'Dr. Fernando Costa', '+55 11 99999-3001', '678.901.234-56', 'Clínica Estética VIP', 'Cirurgião', 'vip', 'active', true),
+('20000000-0000-0000-0000-000000000021', '10000000-0000-0000-0000-000000000001', 'dr.fernando@clinica.com.br', 'Dr. Fernando Costa', '+55 11 99999-3001', '678.901.234-56', 'Clínica Estética VIP', 'Cirurgião', 'vip', 'active'),
 -- Attendees SBCP
-('20000000-0000-0000-0000-000000000022', '10000000-0000-0000-0000-000000000001', 'julia.almeida@email.com', 'Julia Almeida', '+55 27 99999-4001', '789.012.345-67', 'Clínica Bella', 'Médica Residente', 'attendee', 'active', true),
-('20000000-0000-0000-0000-000000000023', '10000000-0000-0000-0000-000000000001', 'pedro.oliveira@email.com', 'Pedro Oliveira', '+55 27 99999-4002', '890.123.456-78', 'Hospital Infantil', 'Estudante Medicina', 'attendee', 'active', true),
-('20000000-0000-0000-0000-000000000024', '10000000-0000-0000-0000-000000000001', 'camila.souza@email.com', 'Camila Souza', '+55 27 99999-4003', '901.234.567-89', 'Universidade XYZ', 'Estudante', 'attendee', 'active', false),
-('20000000-0000-0000-0000-000000000025', '10000000-0000-0000-0000-000000000001', 'rafael.costa@email.com', 'Rafael Costa', '+55 27 99999-4004', '012.345.678-90', 'Autônomo', 'Cirurgião', 'attendee', 'active', true);
+('20000000-0000-0000-0000-000000000022', '10000000-0000-0000-0000-000000000001', 'julia.almeida@email.com', 'Julia Almeida', '+55 27 99999-4001', '789.012.345-67', 'Clínica Bella', 'Médica Residente', 'attendee', 'active'),
+('20000000-0000-0000-0000-000000000023', '10000000-0000-0000-0000-000000000001', 'pedro.oliveira@email.com', 'Pedro Oliveira', '+55 27 99999-4002', '890.123.456-78', 'Hospital Infantil', 'Estudante Medicina', 'attendee', 'active'),
+('20000000-0000-0000-0000-000000000024', '10000000-0000-0000-0000-000000000001', 'camila.souza@email.com', 'Camila Souza', '+55 27 99999-4003', '901.234.567-89', 'Universidade XYZ', 'Estudante', 'attendee', 'active'),
+('20000000-0000-0000-0000-000000000025', '10000000-0000-0000-0000-000000000001', 'rafael.costa@email.com', 'Rafael Costa', '+55 27 99999-4004', '012.345.678-90', 'Autônomo', 'Cirurgião', 'attendee', 'active');
 
 -- Participante TechConf
-INSERT INTO users (id, instance_id, email, full_name, phone, company, position, role, status, email_verified) VALUES
-('20000000-0000-0000-0000-000000000030', '10000000-0000-0000-0000-000000000002', 'mariana.dev@email.com', 'Mariana Developer', '+55 11 98888-0002', 'StartupXYZ', 'Tech Lead', 'attendee', 'active', true);
+INSERT INTO users (id, instance_id, email, full_name, phone, company, position, role, status) VALUES
+('20000000-0000-0000-0000-000000000030', '10000000-0000-0000-0000-000000000002', 'mariana.dev@email.com', 'Mariana Developer', '+55 11 98888-0002', 'StartupXYZ', 'Tech Lead', 'attendee', 'active');
 
 -- ============================================
 -- 7. EVENT AREAS (Áreas dos eventos)
